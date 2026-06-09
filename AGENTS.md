@@ -25,6 +25,19 @@ LINE → Webhook（Vercel Functions）
 - AI解析: Gemini API
 - DB: Neon（Serverless PostgreSQL）
 
+## ディレクトリ構成
+
+```
+money-log/
+├── api/        # Vercel Functions（LINE Webhook処理）
+├── web/        # React + LIFF（家計簿の表示画面）
+├── shared/     # 型定義など共有コード（相対パスでimport）
+├── biome.json  # linter・formatter設定
+└── tsconfig.json  # TypeScript設定（api・shared対象）
+```
+
+`web/` のTypeScript設定はVite初期化時に生成される。
+
 ## 開発メモ
 
 - LINE Webhookの署名検証は必ず行う（セキュリティ上必須）
