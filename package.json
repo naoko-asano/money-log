@@ -1,0 +1,21 @@
+{
+  "name": "money-log",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "check": "biome check .",
+    "format": "biome format --write .",
+    "lint": "biome lint --write ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.13.1",
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "typescript": "^6.0.3"
+  }
+}
