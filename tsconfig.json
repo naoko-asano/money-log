@@ -7,5 +7,5 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["api/**/*", "shared/**/*"]
+  "include": ["api/**/*", "shared/**/*", "vitest.config.ts"]
 }
