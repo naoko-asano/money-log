@@ -5,7 +5,10 @@
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "~api/*": ["./api/*"]
+    }
   },
   "include": ["api/**/*", "shared/**/*", "vitest.config.ts"]
 }
