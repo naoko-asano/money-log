@@ -2,7 +2,7 @@
   "name": "money-log",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
@@ -17,7 +17,11 @@
   "packageManager": "pnpm@10.13.1",
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
+    "@types/node": "^25.9.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^11.0.1"
   }
 }
