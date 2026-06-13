@@ -2,8 +2,8 @@ import * as crypto from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { verifySignature } from "./verify-signature";
 
-const SECRET = "test-secret";
-const BODY = '{"events":[]}';
+const SECRET = "valid-secret";
+const BODY = "body";
 
 function makeSignature(body: string, secret: string): string {
   return crypto.createHmac("SHA256", secret).update(body).digest("base64");
@@ -17,11 +17,11 @@ describe("verifySignature", () => {
 
   it("改ざんされたbodyを拒否する", () => {
     const signature = makeSignature(BODY, SECRET);
-    expect(verifySignature("改ざんされたbody", signature, SECRET)).toBe(false);
+    expect(verifySignature("changed body", signature, SECRET)).toBe(false);
   });
 
   it("別のsecretで作られた署名を拒否する", () => {
-    const signature = makeSignature(BODY, "wrong-secret");
-    expect(verifySignature(BODY, signature, SECRET)).toBe(false);
+    const invalidSignature = makeSignature(BODY, "invalid-secret");
+    expect(verifySignature(BODY, invalidSignature, SECRET)).toBe(false);
   });
 });
