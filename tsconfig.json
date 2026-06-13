@@ -6,10 +6,7 @@
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["node"],
-    "paths": {
-      "~api/*": ["./api/*"]
-    }
+    "types": ["node"]
   },
   "include": ["api/**/*", "shared/**/*", "vitest.config.ts"]
 }

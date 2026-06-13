@@ -1,5 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
-import { verifySignature } from "~api/_lib/verify-signature";
+import { verifySignature } from "./_lib/verify-signature.js";
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") {
