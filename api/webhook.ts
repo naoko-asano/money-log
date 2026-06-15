@@ -1,4 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
+import { sendToAi } from "./_lib/ai.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 
 export async function POST(req: Request): Promise<Response> {
@@ -20,7 +21,15 @@ export async function POST(req: Request): Promise<Response> {
   const body = JSON.parse(rawBody) as { events: webhook.Event[] };
 
   for (const event of body.events ?? []) {
-    console.log(JSON.stringify(event, null, 2));
+    if (event.type !== "message" || event.message.type !== "text") {
+      continue;
+    }
+
+    const text = event.message.text;
+    console.log("LINE message:", text);
+
+    const reply = await sendToAi(text);
+    console.log("AI reply:", reply);
   }
 
   return new Response(null, { status: 200 });
