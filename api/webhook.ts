@@ -1,5 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
-import { sendToAi } from "./_lib/ai.js";
+import { parseExpense } from "./_lib/ai.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 
 export async function POST(req: Request): Promise<Response> {
@@ -28,8 +28,9 @@ export async function POST(req: Request): Promise<Response> {
     const text = event.message.text;
     console.log("LINE message:", text);
 
-    const reply = await sendToAi(text);
-    console.log("AI reply:", reply);
+    const today = new Date().toISOString().slice(0, 10);
+    const expense = await parseExpense(text, today);
+    console.log("parsed expense:", expense);
   }
 
   return new Response(null, { status: 200 });
