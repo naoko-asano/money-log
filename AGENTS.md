@@ -38,6 +38,14 @@ money-log/
 
 `web/` のTypeScript設定はVite初期化時に生成される。
 
+## コード変更後に必ず実行
+
+コードを書いたら以下を順番に実行してください：
+
+1. `pnpm typecheck` — TypeScript型チェック
+2. `pnpm check` — Biome lint/formatチェック
+3. テストに関係する変更の場合は `pnpm test:run`
+
 ## 開発メモ
 
 - LINE Webhookの署名検証は必ず行う（セキュリティ上必須）
