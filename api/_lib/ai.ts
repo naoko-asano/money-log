@@ -1,0 +1,45 @@
+import { GoogleGenAI } from "@google/genai";
+
+const MODEL = "gemini-3.1-flash-lite";
+
+const CATEGORIES = ["食費", "交通費", "日用品", "外食", "娯楽", "その他"];
+
+const ai = new GoogleGenAI({ apiKey: process.env.AI_API_KEY ?? "" });
+
+export type ExpenseRecord = {
+  date: string;
+  amount: number;
+  category: string;
+};
+
+function buildSystemInstruction(today: string): string {
+  return `あなたは家計簿アシスタントです。
+ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
+今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
+カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
+}
+
+export async function parseExpense(
+  text: string,
+  today: string,
+): Promise<ExpenseRecord> {
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: text,
+    config: {
+      systemInstruction: buildSystemInstruction(today),
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          date: { type: "string", description: "YYYY-MM-DD形式の日付" },
+          amount: { type: "number", description: "金額（円）" },
+          category: { type: "string", enum: CATEGORIES },
+        },
+        required: ["date", "amount", "category"],
+      },
+    },
+  });
+
+  return JSON.parse(response.text ?? "{}") as ExpenseRecord;
+}

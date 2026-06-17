@@ -1,4 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
+import { parseExpense } from "./_lib/ai.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 
 export async function POST(req: Request): Promise<Response> {
@@ -20,7 +21,16 @@ export async function POST(req: Request): Promise<Response> {
   const body = JSON.parse(rawBody) as { events: webhook.Event[] };
 
   for (const event of body.events ?? []) {
-    console.log(JSON.stringify(event, null, 2));
+    if (event.type !== "message" || event.message.type !== "text") {
+      continue;
+    }
+
+    const text = event.message.text;
+    console.log("LINE message:", text);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const expense = await parseExpense(text, today);
+    console.log("parsed expense:", expense);
   }
 
   return new Response(null, { status: 200 });
