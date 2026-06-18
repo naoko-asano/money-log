@@ -1,5 +1,6 @@
 import type { webhook } from "@line/bot-sdk";
 import { parseExpense } from "./_lib/ai.js";
+import { replyText } from "./_lib/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 
 export async function POST(req: Request): Promise<Response> {
@@ -31,6 +32,10 @@ export async function POST(req: Request): Promise<Response> {
     const today = new Date().toISOString().slice(0, 10);
     const expense = await parseExpense(text, today);
     console.log("parsed expense:", expense);
+
+    if (!event.replyToken) continue;
+    const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
+    await replyText(event.replyToken, reply);
   }
 
   return new Response(null, { status: 200 });
