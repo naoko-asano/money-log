@@ -31,7 +31,9 @@ LINE → Webhook（Vercel Functions）
 money-log/
 ├── api/        # Vercel Functions（LINE Webhook処理）
 ├── web/        # React + LIFF（家計簿の表示画面）
-├── shared/     # 型定義など共有コード（相対パスでimport）
+├── scripts/    # 管理用スクリプト
+│   └── migrate.ts  # DBマイグレーション
+├── shared/     # apiやweb等での共通処理
 ├── biome.json  # linter・formatter設定
 └── tsconfig.json  # TypeScript設定（api・shared対象）
 ```
