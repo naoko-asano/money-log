@@ -1,6 +1,27 @@
 import { upsertPendingExpense } from "../../shared/db/pending_expenses.js";
 import { parseExpense } from "./ai.js";
-import { replyWithConfirmButtons } from "./messaging/index.js";
+import { replyWithQuickReply } from "./messaging/index.js";
+
+const CONFIRMATION_QUICK_REPLY_ITEMS = [
+  {
+    type: "action" as const,
+    action: {
+      type: "postback" as const,
+      label: "はい",
+      data: "ok",
+      displayText: "はい",
+    },
+  },
+  {
+    type: "action" as const,
+    action: {
+      type: "postback" as const,
+      label: "いいえ",
+      data: "ng",
+      displayText: "いいえ",
+    },
+  },
+];
 
 type Args = {
   userId: string;
@@ -21,5 +42,5 @@ export async function respondToExpense({
   await upsertPendingExpense(userId, expense, webhookEventId);
 
   const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。よろしいですか？`;
-  await replyWithConfirmButtons(replyToken, reply);
+  await replyWithQuickReply(replyToken, reply, CONFIRMATION_QUICK_REPLY_ITEMS);
 }

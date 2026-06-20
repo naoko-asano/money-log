@@ -1,3 +1,4 @@
+import type { messagingApi as messagingApiTypes } from "@line/bot-sdk";
 import { messagingApi } from "@line/bot-sdk";
 
 function createClient(): messagingApi.MessagingApiClient {
@@ -17,40 +18,14 @@ export async function replyText(
   });
 }
 
-export async function replyWithConfirmButtons(
+export async function replyWithQuickReply(
   replyToken: string,
   text: string,
+  items: messagingApiTypes.QuickReplyItem[],
 ): Promise<void> {
   const client = createClient();
   await client.replyMessage({
     replyToken,
-    messages: [
-      {
-        type: "text",
-        text,
-        quickReply: {
-          items: [
-            {
-              type: "action",
-              action: {
-                type: "postback",
-                label: "はい",
-                data: "ok",
-                displayText: "はい",
-              },
-            },
-            {
-              type: "action",
-              action: {
-                type: "postback",
-                label: "いいえ",
-                data: "ng",
-                displayText: "いいえ",
-              },
-            },
-          ],
-        },
-      },
-    ],
+    messages: [{ type: "text", text, quickReply: { items } }],
   });
 }

@@ -1,1 +1,1 @@
-export { replyText, replyWithConfirmButtons } from "./line.js";
+export { replyText, replyWithQuickReply } from "./line.js";
