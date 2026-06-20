@@ -4,6 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
+    "migrate": "tsx --env-file=.env scripts/migrate.ts",
+    "migrate:prod": "tsx scripts/migrate.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
@@ -18,11 +20,13 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
     "@types/node": "^25.9.3",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
-    "@line/bot-sdk": "^11.0.1"
+    "@line/bot-sdk": "^11.0.1",
+    "@neondatabase/serverless": "^1.1.0"
   }
 }

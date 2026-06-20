@@ -1,4 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
+import { createExpense } from "../shared/db/expenses.js";
 import { parseExpense } from "./_lib/ai.js";
 import { replyText } from "./_lib/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
@@ -33,8 +34,12 @@ export async function POST(req: Request): Promise<Response> {
     const expense = await parseExpense(text, today);
     console.log("parsed expense:", expense);
 
+    const userId = event.source?.userId;
+    if (!userId) continue;
+    await createExpense(userId, expense, event.webhookEventId);
+
     if (!event.replyToken) continue;
-    const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
+    const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録しました！`;
     await replyText(event.replyToken, reply);
   }
 
