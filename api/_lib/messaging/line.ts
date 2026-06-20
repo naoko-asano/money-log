@@ -16,3 +16,41 @@ export async function replyText(
     messages: [{ type: "text", text }],
   });
 }
+
+export async function replyWithConfirmButtons(
+  replyToken: string,
+  text: string,
+): Promise<void> {
+  const client = createClient();
+  await client.replyMessage({
+    replyToken,
+    messages: [
+      {
+        type: "text",
+        text,
+        quickReply: {
+          items: [
+            {
+              type: "action",
+              action: {
+                type: "postback",
+                label: "はい",
+                data: "ok",
+                displayText: "はい",
+              },
+            },
+            {
+              type: "action",
+              action: {
+                type: "postback",
+                label: "いいえ",
+                data: "ng",
+                displayText: "いいえ",
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+}
