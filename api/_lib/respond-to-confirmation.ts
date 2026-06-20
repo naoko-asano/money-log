@@ -1,0 +1,34 @@
+import { createExpense } from "../../shared/db/expenses.js";
+import {
+  deletePendingExpense,
+  getPendingExpense,
+} from "../../shared/db/pending_expenses.js";
+import { replyText } from "./messaging/index.js";
+
+type Args = {
+  userId: string;
+  replyToken: string;
+  isApproved: boolean;
+};
+
+export async function respondToConfirmation({
+  userId,
+  replyToken,
+  isApproved,
+}: Args): Promise<void> {
+  const pendingExpense = await getPendingExpense(userId);
+  if (!pendingExpense) {
+    await replyText(replyToken, "確認待ちの費用はありません。");
+    return;
+  }
+
+  if (isApproved) {
+    await createExpense(userId, pendingExpense, pendingExpense.webhookEventId);
+    await deletePendingExpense(userId);
+    await replyText(replyToken, "登録しました！");
+    return;
+  }
+
+  await deletePendingExpense(userId);
+  await replyText(replyToken, "キャンセルしました。");
+}

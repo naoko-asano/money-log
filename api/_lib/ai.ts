@@ -12,22 +12,20 @@ export type ExpenseRecord = {
   category: string;
 };
 
-function buildSystemInstruction(today: string): string {
+function buildSystemInstruction(): string {
+  const today = new Date().toISOString().slice(0, 10);
   return `あなたは家計簿アシスタントです。
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
 今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
 カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
 }
 
-export async function parseExpense(
-  text: string,
-  today: string,
-): Promise<ExpenseRecord> {
+export async function parseExpense(text: string): Promise<ExpenseRecord> {
   const response = await ai.models.generateContent({
     model: MODEL,
     contents: text,
     config: {
-      systemInstruction: buildSystemInstruction(today),
+      systemInstruction: buildSystemInstruction(),
       responseMimeType: "application/json",
       responseSchema: {
         type: "object",
