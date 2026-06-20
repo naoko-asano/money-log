@@ -36,7 +36,7 @@ export async function POST(req: Request): Promise<Response> {
 
     const userId = event.source?.userId;
     if (!userId) continue;
-    await createExpense(userId, expense);
+    await createExpense(userId, expense, event.webhookEventId);
 
     if (!event.replyToken) continue;
     const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録しました！`;

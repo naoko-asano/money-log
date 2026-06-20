@@ -8,6 +8,7 @@ import { sql } from "../shared/db/client";
       date DATE NOT NULL,
       amount INTEGER NOT NULL,
       category TEXT NOT NULL,
+      webhook_event_id TEXT UNIQUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
