@@ -26,12 +26,20 @@ export async function createPendingExpense(
   userId: string,
   expense: Expense,
   webhookEventId: string,
-): Promise<void> {
-  await sql`
+): Promise<PendingExpense | null> {
+  const [row] = await sql`
     INSERT INTO pending_expenses (line_user_id, date, amount, category, webhook_event_id)
     VALUES (${userId}, ${expense.date}, ${expense.amount}, ${expense.category}, ${webhookEventId})
     ON CONFLICT (line_user_id) DO NOTHING
+    RETURNING date, amount, category, webhook_event_id
   `;
+  if (!row) return null;
+  return {
+    date: row.date as string,
+    amount: row.amount as number,
+    category: row.category as string,
+    webhookEventId: row.webhook_event_id as string,
+  };
 }
 
 export async function deletePendingExpense(userId: string): Promise<void> {

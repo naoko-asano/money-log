@@ -73,6 +73,22 @@ export async function respondToExpense({
 
   const expense = await parseExpense(text);
   console.log("parsed expense:", expense);
-  await createPendingExpense(userId, expense, webhookEventId);
-  await askForConfirmation({ expense, replyToken, hasPendingExpense: false });
+  const created = await createPendingExpense(userId, expense, webhookEventId);
+  if (created) {
+    await askForConfirmation({
+      expense: created,
+      replyToken,
+      hasPendingExpense: false,
+    });
+    return;
+  }
+
+  const existing = await getPendingExpense(userId);
+  if (existing) {
+    await askForConfirmation({
+      expense: existing,
+      replyToken,
+      hasPendingExpense: true,
+    });
+  }
 }
