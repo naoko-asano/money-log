@@ -1,6 +1,6 @@
 import { upsertPendingExpense } from "../../shared/db/pending_expenses.js";
-import { parseExpense } from "./ai.js";
-import { replyWithQuickReply } from "./messaging/index.js";
+import { parseExpense } from "../_lib/ai.js";
+import { replyWithQuickReply } from "../_lib/messaging/index.js";
 
 const CONFIRMATION_QUICK_REPLY_ITEMS = [
   {

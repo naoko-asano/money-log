@@ -1,7 +1,7 @@
 import type { webhook } from "@line/bot-sdk";
-import { respondToConfirmation } from "./_lib/respond-to-confirmation.js";
-import { respondToExpense } from "./_lib/respond-to-expense.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
+import { respondToExpense } from "./_usecases/respond-to-expense.js";
 
 function isConfirmationEvent(
   event: webhook.Event,
