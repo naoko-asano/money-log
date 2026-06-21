@@ -1,6 +1,9 @@
-import { upsertPendingExpense } from "../../shared/db/pending_expenses.js";
+import {
+  getPendingExpense,
+  upsertPendingExpense,
+} from "../../shared/db/pending_expenses.js";
 import { parseExpense } from "../_lib/ai.js";
-import { replyWithQuickReply } from "../_lib/messaging/index.js";
+import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
 
 const CONFIRMATION_QUICK_REPLY_ITEMS = [
   {
@@ -36,6 +39,15 @@ export async function respondToExpense({
   text,
   webhookEventId,
 }: Args): Promise<void> {
+  const hasPendingExpense = !!(await getPendingExpense(userId));
+  if (hasPendingExpense) {
+    await replyText(
+      replyToken,
+      "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+    );
+    return;
+  }
+
   const expense = await parseExpense(text);
   console.log("parsed expense:", expense);
 
