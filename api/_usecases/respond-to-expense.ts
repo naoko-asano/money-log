@@ -40,7 +40,11 @@ async function askForConfirmation({
   const reply = hasPendingExpense
     ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
     : baseReply;
-  await replyWithQuickReply(replyToken, reply, CONFIRMATION_QUICK_REPLY_ITEMS);
+  await replyWithQuickReply({
+    replyToken,
+    text: reply,
+    items: CONFIRMATION_QUICK_REPLY_ITEMS,
+  });
 }
 
 type Args = {

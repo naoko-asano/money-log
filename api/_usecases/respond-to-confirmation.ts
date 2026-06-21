@@ -18,17 +18,17 @@ export async function respondToConfirmation({
 }: Args): Promise<void> {
   const pendingExpense = await getPendingExpense(userId);
   if (!pendingExpense) {
-    await replyText(replyToken, "確認待ちの支出はありません。");
+    await replyText({ replyToken, text: "確認待ちの支出はありません。" });
     return;
   }
 
   if (isApproved) {
     await createExpense(userId, pendingExpense, pendingExpense.webhookEventId);
     await deletePendingExpense(userId);
-    await replyText(replyToken, "登録しました！");
+    await replyText({ replyToken, text: "登録しました！" });
     return;
   }
 
   await deletePendingExpense(userId);
-  await replyText(replyToken, "キャンセルしました。");
+  await replyText({ replyToken, text: "キャンセルしました。" });
 }

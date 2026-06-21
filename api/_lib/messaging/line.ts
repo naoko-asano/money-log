@@ -7,10 +7,13 @@ function createClient(): messagingApi.MessagingApiClient {
   return new messagingApi.MessagingApiClient({ channelAccessToken: token });
 }
 
-export async function replyText(
-  replyToken: string,
-  text: string,
-): Promise<void> {
+export async function replyText({
+  replyToken,
+  text,
+}: {
+  replyToken: string;
+  text: string;
+}): Promise<void> {
   const client = createClient();
   await client.replyMessage({
     replyToken,
@@ -18,11 +21,15 @@ export async function replyText(
   });
 }
 
-export async function replyWithQuickReply(
-  replyToken: string,
-  text: string,
-  items: messagingApiTypes.QuickReplyItem[],
-): Promise<void> {
+export async function replyWithQuickReply({
+  replyToken,
+  text,
+  items,
+}: {
+  replyToken: string;
+  text: string;
+  items: messagingApiTypes.QuickReplyItem[];
+}): Promise<void> {
   const client = createClient();
   await client.replyMessage({
     replyToken,
