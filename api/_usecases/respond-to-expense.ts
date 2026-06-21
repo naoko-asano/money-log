@@ -1,6 +1,6 @@
 import {
+  createPendingExpense,
   getPendingExpense,
-  upsertPendingExpense,
 } from "../../shared/db/pending_expenses.js";
 import type { Expense } from "../../shared/model/expense.js";
 import { parseExpense } from "../_lib/ai.js";
@@ -69,6 +69,6 @@ export async function respondToExpense({
 
   const expense = await parseExpense(text);
   console.log("parsed expense:", expense);
-  await upsertPendingExpense(userId, expense, webhookEventId);
+  await createPendingExpense(userId, expense, webhookEventId);
   await askForConfirmation({ expense, replyToken, hasPendingExpense: false });
 }

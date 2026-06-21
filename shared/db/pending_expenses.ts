@@ -21,7 +21,7 @@ export async function getPendingExpense(
   };
 }
 
-export async function upsertPendingExpense(
+export async function createPendingExpense(
   userId: string,
   expense: Expense,
   webhookEventId: string,
@@ -29,12 +29,7 @@ export async function upsertPendingExpense(
   await sql`
     INSERT INTO pending_expenses (line_user_id, date, amount, category, webhook_event_id)
     VALUES (${userId}, ${expense.date}, ${expense.amount}, ${expense.category}, ${webhookEventId})
-    ON CONFLICT (line_user_id) DO UPDATE
-      SET date = EXCLUDED.date,
-          amount = EXCLUDED.amount,
-          category = EXCLUDED.category,
-          webhook_event_id = EXCLUDED.webhook_event_id,
-          created_at = NOW()
+    ON CONFLICT (line_user_id) DO NOTHING
   `;
 }
 
