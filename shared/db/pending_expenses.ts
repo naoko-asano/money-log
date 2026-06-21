@@ -1,7 +1,8 @@
 import type { Expense } from "../model/expense.js";
+import type { PendingExpense } from "../model/pending_expense.js";
 import { sql } from "./client.js";
 
-export type PendingExpense = Expense & { webhookEventId: string };
+export type { PendingExpense };
 
 export async function getPendingExpense(
   userId: string,
