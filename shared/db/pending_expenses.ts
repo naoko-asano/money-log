@@ -1,7 +1,7 @@
-import type { ExpenseRecord } from "../../api/_lib/ai.js";
+import type { Expense } from "../model/expense.js";
 import { sql } from "./client.js";
 
-export type PendingExpense = ExpenseRecord & { webhookEventId: string };
+export type PendingExpense = Expense & { webhookEventId: string };
 
 export async function getPendingExpense(
   userId: string,
@@ -23,7 +23,7 @@ export async function getPendingExpense(
 
 export async function upsertPendingExpense(
   userId: string,
-  expense: ExpenseRecord,
+  expense: Expense,
   webhookEventId: string,
 ): Promise<void> {
   await sql`

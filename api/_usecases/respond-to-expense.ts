@@ -2,8 +2,9 @@ import {
   getPendingExpense,
   upsertPendingExpense,
 } from "../../shared/db/pending_expenses.js";
+import type { Expense } from "../../shared/model/expense.js";
 import { parseExpense } from "../_lib/ai.js";
-import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
+import { replyWithQuickReply } from "../_lib/messaging/index.js";
 
 const CONFIRMATION_QUICK_REPLY_ITEMS = [
   {
@@ -26,6 +27,22 @@ const CONFIRMATION_QUICK_REPLY_ITEMS = [
   },
 ];
 
+async function askForConfirmation({
+  expense,
+  replyToken,
+  hasPendingExpense,
+}: {
+  expense: Expense;
+  replyToken: string;
+  hasPendingExpense: boolean;
+}): Promise<void> {
+  const baseReply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
+  const reply = hasPendingExpense
+    ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
+    : baseReply;
+  await replyWithQuickReply(replyToken, reply, CONFIRMATION_QUICK_REPLY_ITEMS);
+}
+
 type Args = {
   userId: string;
   replyToken: string;
@@ -39,20 +56,19 @@ export async function respondToExpense({
   text,
   webhookEventId,
 }: Args): Promise<void> {
-  const hasPendingExpense = !!(await getPendingExpense(userId));
-  if (hasPendingExpense) {
-    await replyText(
+  const pendingExpense = await getPendingExpense(userId);
+
+  if (pendingExpense) {
+    await askForConfirmation({
+      expense: pendingExpense,
       replyToken,
-      "先に確認中の支出を「はい」か「いいえ」で回答してください。",
-    );
+      hasPendingExpense: true,
+    });
     return;
   }
 
   const expense = await parseExpense(text);
   console.log("parsed expense:", expense);
-
   await upsertPendingExpense(userId, expense, webhookEventId);
-
-  const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。よろしいですか？`;
-  await replyWithQuickReply(replyToken, reply, CONFIRMATION_QUICK_REPLY_ITEMS);
+  await askForConfirmation({ expense, replyToken, hasPendingExpense: false });
 }

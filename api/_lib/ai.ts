@@ -1,16 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
+import type { Expense } from "../../shared/model/expense.js";
 
 const MODEL = "gemini-3.1-flash-lite";
 
 const CATEGORIES = ["食費", "交通費", "日用品", "外食", "娯楽", "その他"];
 
 const ai = new GoogleGenAI({ apiKey: process.env.AI_API_KEY ?? "" });
-
-export type ExpenseRecord = {
-  date: string;
-  amount: number;
-  category: string;
-};
 
 function buildSystemInstruction(): string {
   const today = new Date().toISOString().slice(0, 10);
@@ -20,7 +15,7 @@ function buildSystemInstruction(): string {
 カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
 }
 
-export async function parseExpense(text: string): Promise<ExpenseRecord> {
+export async function parseExpense(text: string): Promise<Expense> {
   const response = await ai.models.generateContent({
     model: MODEL,
     contents: text,
@@ -39,5 +34,5 @@ export async function parseExpense(text: string): Promise<ExpenseRecord> {
     },
   });
 
-  return JSON.parse(response.text ?? "{}") as ExpenseRecord;
+  return JSON.parse(response.text ?? "{}") as Expense;
 }

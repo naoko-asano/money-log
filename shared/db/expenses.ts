@@ -1,9 +1,9 @@
-import type { ExpenseRecord } from "../../api/_lib/ai.js";
+import type { Expense } from "../model/expense.js";
 import { sql } from "./client.js";
 
 export async function createExpense(
   userId: string,
-  expense: ExpenseRecord,
+  expense: Expense,
   webhookEventId: string,
 ): Promise<void> {
   await sql`
