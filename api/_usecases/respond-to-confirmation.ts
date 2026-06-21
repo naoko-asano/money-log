@@ -18,7 +18,7 @@ export async function respondToConfirmation({
 }: Args): Promise<void> {
   const pendingExpense = await getPendingExpense(userId);
   if (!pendingExpense) {
-    await replyText(replyToken, "確認待ちの費用はありません。");
+    await replyText(replyToken, "確認待ちの支出はありません。");
     return;
   }
 
