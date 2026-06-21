@@ -2,7 +2,7 @@ import { createExpense } from "../../shared/db/expenses.js";
 import {
   deletePendingExpense,
   getPendingExpense,
-} from "../../shared/db/pending_expenses.js";
+} from "../../shared/db/pending-expenses.js";
 import { replyText } from "../_lib/messaging/index.js";
 
 type Args = {

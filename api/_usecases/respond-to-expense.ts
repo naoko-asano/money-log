@@ -1,7 +1,7 @@
 import {
   createPendingExpense,
   getPendingExpense,
-} from "../../shared/db/pending_expenses.js";
+} from "../../shared/db/pending-expenses.js";
 import type { Expense } from "../../shared/model/expense.js";
 import { parseExpense } from "../_lib/ai.js";
 import { replyWithQuickReply } from "../_lib/messaging/index.js";
