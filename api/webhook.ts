@@ -45,10 +45,12 @@ export async function POST(req: Request): Promise<Response> {
     if (!userId) continue;
 
     if (isConfirmationEvent(event)) {
+      const { action, pendingWebhookEventId } = JSON.parse(event.postback.data);
       await respondToConfirmation({
         userId,
         replyToken: event.replyToken,
-        isApproved: event.postback.data === "ok",
+        isApproved: action === "ok",
+        pendingWebhookEventId,
       });
     } else if (isExpenseInputEvent(event)) {
       await respondToExpense({
