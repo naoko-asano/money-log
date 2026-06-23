@@ -28,11 +28,11 @@ export async function respondToConfirmation({
 
   if (isApproved) {
     await createExpense(userId, pendingExpense, pendingExpense.webhookEventId);
-    await deletePendingExpense(userId);
+    await deletePendingExpense(userId, pendingExpense.webhookEventId);
     await replyText({ replyToken, text: "登録しました！" });
     return;
   }
 
-  await deletePendingExpense(userId);
+  await deletePendingExpense(userId, pendingExpense.webhookEventId);
   await replyText({ replyToken, text: "キャンセルしました。" });
 }

@@ -42,8 +42,12 @@ export async function createPendingExpense(
   };
 }
 
-export async function deletePendingExpense(userId: string): Promise<void> {
+export async function deletePendingExpense(
+  userId: string,
+  webhookEventId: string,
+): Promise<void> {
   await sql`
-    DELETE FROM pending_expenses WHERE line_user_id = ${userId}
+    DELETE FROM pending_expenses
+    WHERE line_user_id = ${userId} AND webhook_event_id = ${webhookEventId}
   `;
 }
