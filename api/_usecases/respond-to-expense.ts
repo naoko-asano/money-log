@@ -4,6 +4,7 @@ import {
   getPendingExpense,
 } from "../../shared/db/pending-expenses.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
+import { formatDate } from "../../shared/utils/date.js";
 import { parseExpense } from "../_lib/ai.js";
 import { replyWithQuickReply } from "../_lib/messaging/index.js";
 
@@ -40,7 +41,7 @@ async function askForConfirmation({
   hasPendingExpense: boolean;
 }): Promise<void> {
   const items = buildConfirmationItems(expense.webhookEventId);
-  const baseReply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
+  const baseReply = `${formatDate(expense.date)}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
   const reply = hasPendingExpense
     ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
     : baseReply;

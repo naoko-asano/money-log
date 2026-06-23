@@ -15,7 +15,7 @@ export async function getPendingExpense(
   `;
   if (!row) return null;
   return {
-    date: row.date as string,
+    date: row.date as Date,
     amount: row.amount as number,
     category: row.category as string,
     webhookEventId: row.webhook_event_id as string,
@@ -35,7 +35,7 @@ export async function createPendingExpense(
   `;
   if (!row) return null;
   return {
-    date: row.date as string,
+    date: row.date as Date,
     amount: row.amount as number,
     category: row.category as string,
     webhookEventId: row.webhook_event_id as string,
