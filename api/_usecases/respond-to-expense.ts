@@ -1,3 +1,4 @@
+import { existsExpenseByWebhookEventId } from "../../shared/db/expenses.js";
 import {
   createPendingExpense,
   getPendingExpense,
@@ -73,6 +74,9 @@ export async function respondToExpense({
     });
     return;
   }
+
+  // NOTE: 再送を考慮
+  if (await existsExpenseByWebhookEventId(webhookEventId)) return;
 
   const expense = await parseExpense(text);
   console.log("parsed expense:", expense);
