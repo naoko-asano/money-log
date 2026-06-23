@@ -1,4 +1,4 @@
-import { createExpense } from "../../shared/db/expenses.js";
+import { createExpenseFromPending } from "../../shared/db/expenses.js";
 import {
   deletePendingExpense,
   getPendingExpense,
@@ -27,8 +27,7 @@ export async function respondToConfirmation({
   if (pendingExpense.webhookEventId !== pendingWebhookEventId) return;
 
   if (isApproved) {
-    await createExpense(userId, pendingExpense, pendingExpense.webhookEventId);
-    await deletePendingExpense(userId, pendingExpense.webhookEventId);
+    await createExpenseFromPending(userId, pendingExpense);
     await replyText({ replyToken, text: "登録しました！" });
     return;
   }
