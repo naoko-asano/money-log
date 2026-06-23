@@ -1,8 +1,26 @@
 import type { webhook } from "@line/bot-sdk";
-import { createExpense } from "../shared/db/expenses.js";
-import { parseExpense } from "./_lib/ai.js";
-import { replyText } from "./_lib/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
+import { respondToExpense } from "./_usecases/respond-to-expense.js";
+
+function isConfirmationEvent(
+  event: webhook.Event,
+): event is webhook.PostbackEvent & { replyToken: string } {
+  return event.type === "postback" && !!event.replyToken;
+}
+
+function isExpenseInputEvent(
+  event: webhook.Event,
+): event is webhook.MessageEvent & {
+  message: webhook.TextMessageContent;
+  replyToken: string;
+} {
+  return (
+    event.type === "message" &&
+    event.message.type === "text" &&
+    !!event.replyToken
+  );
+}
 
 export async function POST(req: Request): Promise<Response> {
   const signature = req.headers.get("x-line-signature");
@@ -23,24 +41,25 @@ export async function POST(req: Request): Promise<Response> {
   const body = JSON.parse(rawBody) as { events: webhook.Event[] };
 
   for (const event of body.events ?? []) {
-    if (event.type !== "message" || event.message.type !== "text") {
-      continue;
-    }
-
-    const text = event.message.text;
-    console.log("LINE message:", text);
-
-    const today = new Date().toISOString().slice(0, 10);
-    const expense = await parseExpense(text, today);
-    console.log("parsed expense:", expense);
-
     const userId = event.source?.userId;
     if (!userId) continue;
-    await createExpense(userId, expense, event.webhookEventId);
 
-    if (!event.replyToken) continue;
-    const reply = `${expense.date}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録しました！`;
-    await replyText(event.replyToken, reply);
+    if (isConfirmationEvent(event)) {
+      const { action, pendingWebhookEventId } = JSON.parse(event.postback.data);
+      await respondToConfirmation({
+        userId,
+        replyToken: event.replyToken,
+        isApproved: action === "ok",
+        pendingWebhookEventId,
+      });
+    } else if (isExpenseInputEvent(event)) {
+      await respondToExpense({
+        userId,
+        replyToken: event.replyToken,
+        text: event.message.text,
+        webhookEventId: event.webhookEventId,
+      });
+    }
   }
 
   return new Response(null, { status: 200 });

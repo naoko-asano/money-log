@@ -14,5 +14,17 @@ import { sql } from "../shared/db/client";
     )
   `;
 
-  console.log("Done: expenses table created.");
+  await sql`
+    CREATE TABLE IF NOT EXISTS pending_expenses (
+      id SERIAL PRIMARY KEY,
+      line_user_id TEXT NOT NULL UNIQUE,
+      date DATE NOT NULL,
+      amount INTEGER NOT NULL,
+      category TEXT NOT NULL,
+      webhook_event_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  console.log("Done: expenses, pending_expenses tables created.");
 })();
