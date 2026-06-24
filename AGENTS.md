@@ -14,7 +14,7 @@ LINE → Webhook（Vercel Functions）
   ├─ テキスト → Gemini で解析 → 「XXをOO円で登録しますか？」
   └─ 画像    → Gemini でOCR  → 「XXをOO円で登録しますか？」（画像は保存しない）
 確認OK → Neon（PostgreSQL）に保存
-確認待ち状態の管理 → 未定
+確認待ち状態の管理 → Neon の pending_expenses テーブル（line_user_id で1件管理）
 ```
 
 ## 技術スタック
@@ -57,4 +57,3 @@ money-log/
 
 - LINE Webhookの署名検証は必ず行う（セキュリティ上必須）
 - 領収書画像はGemini解析後に捨てる。DBには保存しない
-- 確認メッセージ（「登録しますか？」）と「OK」返信は別Webhookになるため、状態管理が必要（方法は未定）
