@@ -17,7 +17,11 @@ export async function askAi({
   const response = await ai.models.generateContent({
     model: MODEL,
     contents,
-    config: { responseMimeType: "application/json", systemInstruction, responseSchema },
+    config: {
+      responseMimeType: "application/json",
+      systemInstruction,
+      responseSchema,
+    },
   });
-  return response.text ?? "";
+  return response.text ?? "{}";
 }

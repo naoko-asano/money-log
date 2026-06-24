@@ -1,7 +1,10 @@
-import { CATEGORIES, type Expense } from "../../shared/model/expense.js";
+import {
+  CATEGORIES,
+  type Expense,
+  isCategory,
+} from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
 import { askAi } from "../_lib/ai.js";
-
 
 function buildSystemInstruction(): string {
   const today = getToday();
@@ -27,8 +30,13 @@ export async function parseExpense(text: string): Promise<Expense> {
   });
 
   const parsed = JSON.parse(result);
+
   const date = new Date(parsed.date);
   if (Number.isNaN(date.getTime()))
     throw new Error(`Invalid date: ${parsed.date}`);
+
+  if (!isCategory(parsed.category))
+    throw new Error(`Invalid category: ${parsed.category}`);
+
   return { ...parsed, date };
 }
