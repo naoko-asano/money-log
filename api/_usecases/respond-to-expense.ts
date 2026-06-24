@@ -6,8 +6,8 @@ import {
 import type { Expense } from "../../shared/model/expense.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
-import { parseExpense } from "../_lib/ai.js";
 import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
+import { parseExpense } from "./parse-expense.js";
 
 function buildConfirmationItems(pendingWebhookEventId: string) {
   return [
