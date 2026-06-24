@@ -3,10 +3,11 @@ import {
   createPendingExpense,
   getPendingExpense,
 } from "../../shared/db/pending-expenses.js";
+import type { Expense } from "../../shared/model/expense.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
 import { parseExpense } from "../_lib/ai.js";
-import { replyWithQuickReply } from "../_lib/messaging/index.js";
+import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
 
 function buildConfirmationItems(pendingWebhookEventId: string) {
   return [
@@ -79,7 +80,16 @@ export async function respondToExpense({
   // NOTE: 再送を考慮
   if (await existsExpenseByWebhookEventId(webhookEventId)) return;
 
-  const expense = await parseExpense(text);
+  let expense: Expense;
+  try {
+    expense = await parseExpense(text);
+  } catch {
+    await replyText({
+      replyToken,
+      text: "解析できませんでした。もう一度お試しください。",
+    });
+    return;
+  }
   console.log("parsed expense:", expense);
   const created = await createPendingExpense(userId, expense, webhookEventId);
   if (created) {

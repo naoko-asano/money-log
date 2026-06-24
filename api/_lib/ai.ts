@@ -36,5 +36,8 @@ export async function parseExpense(text: string): Promise<Expense> {
   });
 
   const parsed = JSON.parse(response.text ?? "{}");
-  return { ...parsed, date: new Date(parsed.date) };
+  const date = new Date(parsed.date);
+  if (Number.isNaN(date.getTime()))
+    throw new Error(`Invalid date: ${parsed.date}`);
+  return { ...parsed, date };
 }
