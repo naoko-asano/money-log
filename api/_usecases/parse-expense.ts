@@ -1,8 +1,7 @@
-import type { Expense } from "../../shared/model/expense.js";
+import { CATEGORIES, type Expense } from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
 import { askAi } from "../_lib/ai.js";
 
-const CATEGORIES = ["食費", "交通費", "日用品", "外食", "娯楽", "その他"];
 
 function buildSystemInstruction(): string {
   const today = getToday();

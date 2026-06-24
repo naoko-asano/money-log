@@ -1,4 +1,4 @@
-import type { Expense } from "../model/expense.js";
+import type { Category, Expense } from "../model/expense.js";
 import type { PendingExpense } from "../model/pending-expense.js";
 import { sql } from "./client.js";
 
@@ -17,7 +17,7 @@ export async function getPendingExpense(
   return {
     date: row.date as Date,
     amount: row.amount as number,
-    category: row.category as string,
+    category: row.category as Category,
     webhookEventId: row.webhook_event_id as string,
   };
 }
@@ -37,7 +37,7 @@ export async function createPendingExpense(
   return {
     date: row.date as Date,
     amount: row.amount as number,
-    category: row.category as string,
+    category: row.category as Category,
     webhookEventId: row.webhook_event_id as string,
   };
 }
