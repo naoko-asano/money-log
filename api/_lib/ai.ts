@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Expense } from "../../shared/model/expense.js";
+import { getToday } from "../../shared/utils/date.js";
 
 const MODEL = "gemini-3.1-flash-lite";
 
@@ -8,7 +9,7 @@ const CATEGORIES = ["食費", "交通費", "日用品", "外食", "娯楽", "そ
 const ai = new GoogleGenAI({ apiKey: process.env.AI_API_KEY ?? "" });
 
 function buildSystemInstruction(): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getToday();
   return `あなたは家計簿アシスタントです。
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
 今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
@@ -34,5 +35,9 @@ export async function parseExpense(text: string): Promise<Expense> {
     },
   });
 
-  return JSON.parse(response.text ?? "{}") as Expense;
+  const parsed = JSON.parse(response.text ?? "{}");
+  const date = new Date(parsed.date);
+  if (Number.isNaN(date.getTime()))
+    throw new Error(`Invalid date: ${parsed.date}`);
+  return { ...parsed, date };
 }
