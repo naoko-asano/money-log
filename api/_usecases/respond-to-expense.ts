@@ -7,7 +7,6 @@ import type { Expense } from "../../shared/model/expense.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
 import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
-import { parseExpense } from "./parse-expense.js";
 
 function buildConfirmationItems(pendingWebhookEventId: string) {
   return [
@@ -56,15 +55,15 @@ async function askForConfirmation({
 type Args = {
   userId: string;
   replyToken: string;
-  text: string;
   webhookEventId: string;
+  parseInput: () => Promise<Expense>;
 };
 
 export async function respondToExpense({
   userId,
   replyToken,
-  text,
   webhookEventId,
+  parseInput,
 }: Args): Promise<void> {
   const pendingExpense = await getPendingExpense(userId);
 
@@ -82,7 +81,7 @@ export async function respondToExpense({
 
   let expense: Expense;
   try {
-    expense = await parseExpense(text);
+    expense = await parseInput();
   } catch {
     await replyText({
       replyToken,

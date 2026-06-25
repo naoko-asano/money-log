@@ -14,21 +14,17 @@ function buildSystemInstruction(): string {
 カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
 }
 
-export async function parseExpense(text: string): Promise<Expense> {
-  const result = await askAi({
-    contents: text,
-    systemInstruction: buildSystemInstruction(),
-    responseSchema: {
-      type: "object",
-      properties: {
-        date: { type: "string", description: "YYYY-MM-DD形式の日付" },
-        amount: { type: "number", description: "金額（円）" },
-        category: { type: "string", enum: CATEGORIES },
-      },
-      required: ["date", "amount", "category"],
-    },
-  });
+const EXPENSE_SCHEMA = {
+  type: "object",
+  properties: {
+    date: { type: "string", description: "YYYY-MM-DD形式の日付" },
+    amount: { type: "number", description: "金額（円）" },
+    category: { type: "string", enum: CATEGORIES },
+  },
+  required: ["date", "amount", "category"],
+};
 
+function toExpense(result: string): Expense {
   const parsed = JSON.parse(result);
 
   const date = new Date(parsed.date);
@@ -39,4 +35,28 @@ export async function parseExpense(text: string): Promise<Expense> {
     throw new Error(`Invalid category: ${parsed.category}`);
 
   return { ...parsed, date };
+}
+
+export async function parseExpenseFromText(text: string): Promise<Expense> {
+  const result = await askAi({
+    contents: text,
+    systemInstruction: buildSystemInstruction(),
+    responseSchema: EXPENSE_SCHEMA,
+  });
+  return toExpense(result);
+}
+
+export async function parseExpenseFromImage(
+  imageBase64: string,
+  mimeType: string,
+): Promise<Expense> {
+  const result = await askAi({
+    contents: [
+      { inlineData: { mimeType, data: imageBase64 } },
+      { text: "この領収書から支出情報を読み取ってください" },
+    ],
+    systemInstruction: buildSystemInstruction(),
+    responseSchema: EXPENSE_SCHEMA,
+  });
+  return toExpense(result);
 }
