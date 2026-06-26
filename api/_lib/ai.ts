@@ -9,13 +9,13 @@ export type InputItem = TextItem | ImageItem;
 
 export type Params = {
   contents: string | InputItem[];
-  systemInstruction?: string;
+  systemPrompt?: string;
   responseSchema?: Record<string, unknown>;
 };
 
 export async function askAi({
   contents,
-  systemInstruction,
+  systemPrompt,
   responseSchema,
 }: Params): Promise<string> {
   const response = await ai.models.generateContent({
@@ -23,7 +23,7 @@ export async function askAi({
     contents,
     config: {
       responseMimeType: "application/json",
-      systemInstruction,
+      systemInstruction: systemPrompt,
       responseSchema,
     },
   });

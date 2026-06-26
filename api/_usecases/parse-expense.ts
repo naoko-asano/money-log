@@ -6,7 +6,7 @@ import {
 import { getToday } from "../../shared/utils/date.js";
 import { askAi } from "../_lib/ai.js";
 
-function buildSystemInstruction(): string {
+function buildSystemPrompt(): string {
   const today = getToday();
   return `あなたは家計簿アシスタントです。
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
@@ -40,7 +40,7 @@ function toExpense(result: string): Expense {
 export async function parseExpenseFromText(text: string): Promise<Expense> {
   const result = await askAi({
     contents: text,
-    systemInstruction: buildSystemInstruction(),
+    systemPrompt: buildSystemPrompt(),
     responseSchema: EXPENSE_SCHEMA,
   });
   return toExpense(result);
@@ -55,7 +55,7 @@ export async function parseExpenseFromImage(
       { inlineData: { mimeType, data: imageBase64 } },
       { text: "この領収書から支出情報を読み取ってください" },
     ],
-    systemInstruction: buildSystemInstruction(),
+    systemPrompt: buildSystemPrompt(),
     responseSchema: EXPENSE_SCHEMA,
   });
   return toExpense(result);
