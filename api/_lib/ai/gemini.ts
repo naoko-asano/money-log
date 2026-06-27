@@ -1,5 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
-import { isImageItem, type Params } from "./index.js";
+import { type AskAiParams, isImageItem } from "./index.js";
+
+const MODEL = "gemini-3.1-flash-lite";
 
 function createClient(): GoogleGenAI {
   const apiKey = process.env.AI_API_KEY;
@@ -7,9 +9,7 @@ function createClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
-const MODEL = "gemini-3.1-flash-lite";
-
-function convertGeminiContents(contents: Params["contents"]) {
+function convertGeminiContents(contents: AskAiParams["contents"]) {
   if (typeof contents === "string") return contents;
   return contents.map((item) =>
     isImageItem(item)
@@ -22,7 +22,7 @@ export async function askAi({
   contents,
   systemPrompt,
   responseSchema,
-}: Params): Promise<string> {
+}: AskAiParams): Promise<string> {
   const response = await createClient().models.generateContent({
     model: MODEL,
     contents: convertGeminiContents(contents),
