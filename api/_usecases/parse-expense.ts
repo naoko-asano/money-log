@@ -4,7 +4,7 @@ import {
   isCategory,
 } from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
-import { askAi } from "../_lib/ai.js";
+import { askAi } from "../_lib/ai/index.js";
 
 function buildSystemPrompt(): string {
   const today = getToday();
