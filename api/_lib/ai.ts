@@ -27,5 +27,7 @@ export async function askAi({
       responseSchema,
     },
   });
-  return response.text ?? "{}";
+  const responseText = response.text;
+  if (!responseText) throw new Error("AI returned empty response");
+  return responseText;
 }
