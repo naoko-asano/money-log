@@ -82,7 +82,8 @@ export async function respondToExpense({
   let expense: Expense;
   try {
     expense = await parseInput();
-  } catch {
+  } catch (e) {
+    console.error("parseInput failed:", e);
     await replyText({
       replyToken,
       text: "解析できませんでした。もう一度お試しください。",
