@@ -4,7 +4,7 @@ import {
   isCategory,
 } from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
-import { askAi } from "../_lib/ai.js";
+import { askAi } from "../_lib/ai/index.js";
 
 function buildSystemPrompt(): string {
   const today = getToday();
@@ -52,7 +52,7 @@ export async function parseExpenseFromImage(
 ): Promise<Expense> {
   const result = await askAi({
     contents: [
-      { inlineData: { mimeType, data: imageBase64 } },
+      { mimeType, imageBase64 },
       { text: "この領収書から支出情報を読み取ってください" },
     ],
     systemPrompt: buildSystemPrompt(),
