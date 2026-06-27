@@ -58,7 +58,8 @@ export async function getImageContent(
   messageId: string,
 ): Promise<{ data: string; mimeType: string }> {
   const client = createBlobClient();
-  const stream = await client.getMessageContent(messageId);
-  const data = await streamToBase64(stream);
-  return { data, mimeType: "image/jpeg" };
+  const { httpResponse, body } = await client.getMessageContentWithHttpInfo(messageId);
+  const mimeType = httpResponse.headers.get("content-type") ?? "image/jpeg";
+  const data = await streamToBase64(body);
+  return { data, mimeType };
 }
