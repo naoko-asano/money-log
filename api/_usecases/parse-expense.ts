@@ -4,7 +4,7 @@ import {
   isCategory,
 } from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
-import { askAi } from "../_lib/ai/index.js";
+import type { AskAi, ImageItem } from "./_ports/ai.js";
 
 const EXPENSE_SCHEMA = {
   type: "object",
@@ -16,7 +16,13 @@ const EXPENSE_SCHEMA = {
   required: ["date", "amount", "category"],
 };
 
-export async function parseExpenseFromText(text: string): Promise<Expense> {
+export async function parseExpenseFromText({
+  askAi,
+  text,
+}: {
+  askAi: AskAi;
+  text: string;
+}): Promise<Expense> {
   const result = await askAi({
     contents: text,
     systemPrompt: buildSystemPrompt(),
@@ -25,10 +31,11 @@ export async function parseExpenseFromText(text: string): Promise<Expense> {
   return toExpense(result);
 }
 
-export async function parseExpenseFromImage(
-  imageBase64: string,
-  mimeType: string,
-): Promise<Expense> {
+export async function parseExpenseFromImage({
+  askAi,
+  imageBase64,
+  mimeType,
+}: { askAi: AskAi } & ImageItem): Promise<Expense> {
   const result = await askAi({
     contents: [
       { mimeType, imageBase64 },
