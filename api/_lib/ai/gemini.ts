@@ -14,7 +14,7 @@ function convertGeminiContents(contents: Params["contents"]) {
   return contents.map((item) =>
     isImageItem(item)
       ? { inlineData: { mimeType: item.mimeType, data: item.imageBase64 } }
-      : item
+      : item,
   );
 }
 
