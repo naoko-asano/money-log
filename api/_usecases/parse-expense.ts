@@ -6,14 +6,6 @@ import {
 import { getToday } from "../../shared/utils/date.js";
 import { askAi } from "../_lib/ai/index.js";
 
-function buildSystemPrompt(): string {
-  const today = getToday();
-  return `あなたは家計簿アシスタントです。
-ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
-今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
-カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
-}
-
 const EXPENSE_SCHEMA = {
   type: "object",
   properties: {
@@ -23,19 +15,6 @@ const EXPENSE_SCHEMA = {
   },
   required: ["date", "amount", "category"],
 };
-
-function toExpense(result: string): Expense {
-  const parsed = JSON.parse(result);
-
-  const date = new Date(parsed.date);
-  if (Number.isNaN(date.getTime()))
-    throw new Error(`Invalid date: ${parsed.date}`);
-
-  if (!isCategory(parsed.category))
-    throw new Error(`Invalid category: ${parsed.category}`);
-
-  return { ...parsed, date };
-}
 
 export async function parseExpenseFromText(text: string): Promise<Expense> {
   const result = await askAi({
@@ -59,4 +38,25 @@ export async function parseExpenseFromImage(
     responseSchema: EXPENSE_SCHEMA,
   });
   return toExpense(result);
+}
+
+function buildSystemPrompt(): string {
+  const today = getToday();
+  return `あなたは家計簿アシスタントです。
+ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
+今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
+カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
+}
+
+function toExpense(result: string): Expense {
+  const parsed = JSON.parse(result);
+
+  const date = new Date(parsed.date);
+  if (Number.isNaN(date.getTime()))
+    throw new Error(`Invalid date: ${parsed.date}`);
+
+  if (!isCategory(parsed.category))
+    throw new Error(`Invalid category: ${parsed.category}`);
+
+  return { ...parsed, date };
 }
