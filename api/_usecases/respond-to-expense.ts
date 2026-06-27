@@ -8,50 +8,6 @@ import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
 import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
 
-function buildConfirmationItems(pendingWebhookEventId: string) {
-  return [
-    {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "はい",
-        data: JSON.stringify({ action: "ok", pendingWebhookEventId }),
-        displayText: "はい",
-      },
-    },
-    {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "いいえ",
-        data: JSON.stringify({ action: "ng", pendingWebhookEventId }),
-        displayText: "いいえ",
-      },
-    },
-  ];
-}
-
-async function askForConfirmation({
-  expense,
-  replyToken,
-  hasPendingExpense,
-}: {
-  expense: PendingExpense;
-  replyToken: string;
-  hasPendingExpense: boolean;
-}): Promise<void> {
-  const items = buildConfirmationItems(expense.webhookEventId);
-  const baseReply = `${formatDate(expense.date)}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
-  const reply = hasPendingExpense
-    ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
-    : baseReply;
-  await replyWithQuickReply({
-    replyToken,
-    text: reply,
-    items,
-  });
-}
-
 type Args = {
   userId: string;
   replyToken: string;
@@ -109,4 +65,48 @@ export async function respondToExpense({
       hasPendingExpense: true,
     });
   }
+}
+
+function buildConfirmationItems(pendingWebhookEventId: string) {
+  return [
+    {
+      type: "action" as const,
+      action: {
+        type: "postback" as const,
+        label: "はい",
+        data: JSON.stringify({ action: "ok", pendingWebhookEventId }),
+        displayText: "はい",
+      },
+    },
+    {
+      type: "action" as const,
+      action: {
+        type: "postback" as const,
+        label: "いいえ",
+        data: JSON.stringify({ action: "ng", pendingWebhookEventId }),
+        displayText: "いいえ",
+      },
+    },
+  ];
+}
+
+async function askForConfirmation({
+  expense,
+  replyToken,
+  hasPendingExpense,
+}: {
+  expense: PendingExpense;
+  replyToken: string;
+  hasPendingExpense: boolean;
+}): Promise<void> {
+  const items = buildConfirmationItems(expense.webhookEventId);
+  const baseReply = `${formatDate(expense.date)}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
+  const reply = hasPendingExpense
+    ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
+    : baseReply;
+  await replyWithQuickReply({
+    replyToken,
+    text: reply,
+    items,
+  });
 }

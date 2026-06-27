@@ -8,38 +8,6 @@ import {
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
 import { respondToExpense } from "./_usecases/respond-to-expense.js";
 
-function isConfirmationEvent(
-  event: webhook.Event,
-): event is webhook.PostbackEvent & { replyToken: string } {
-  return event.type === "postback" && !!event.replyToken;
-}
-
-function isTextInputEvent(
-  event: webhook.Event,
-): event is webhook.MessageEvent & {
-  message: webhook.TextMessageContent;
-  replyToken: string;
-} {
-  return (
-    event.type === "message" &&
-    event.message.type === "text" &&
-    !!event.replyToken
-  );
-}
-
-function isImageInputEvent(
-  event: webhook.Event,
-): event is webhook.MessageEvent & {
-  message: webhook.ImageMessageContent;
-  replyToken: string;
-} {
-  return (
-    event.type === "message" &&
-    event.message.type === "image" &&
-    !!event.replyToken
-  );
-}
-
 export async function POST(req: Request): Promise<Response> {
   const signature = req.headers.get("x-line-signature");
   if (!signature) {
@@ -93,4 +61,36 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   return new Response(null, { status: 200 });
+}
+
+function isConfirmationEvent(
+  event: webhook.Event,
+): event is webhook.PostbackEvent & { replyToken: string } {
+  return event.type === "postback" && !!event.replyToken;
+}
+
+function isTextInputEvent(
+  event: webhook.Event,
+): event is webhook.MessageEvent & {
+  message: webhook.TextMessageContent;
+  replyToken: string;
+} {
+  return (
+    event.type === "message" &&
+    event.message.type === "text" &&
+    !!event.replyToken
+  );
+}
+
+function isImageInputEvent(
+  event: webhook.Event,
+): event is webhook.MessageEvent & {
+  message: webhook.ImageMessageContent;
+  replyToken: string;
+} {
+  return (
+    event.type === "message" &&
+    event.message.type === "image" &&
+    !!event.replyToken
+  );
 }
