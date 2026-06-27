@@ -1,1 +1,1 @@
-export { replyText, replyWithQuickReply } from "./line.js";
+export { getImageContent, replyText, replyWithQuickReply } from "./line.js";

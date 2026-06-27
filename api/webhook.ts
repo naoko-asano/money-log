@@ -1,5 +1,10 @@
 import type { webhook } from "@line/bot-sdk";
+import { getImageContent } from "./_lib/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import {
+  parseExpenseFromImage,
+  parseExpenseFromText,
+} from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
 import { respondToExpense } from "./_usecases/respond-to-expense.js";
 
@@ -9,7 +14,7 @@ function isConfirmationEvent(
   return event.type === "postback" && !!event.replyToken;
 }
 
-function isExpenseInputEvent(
+function isTextInputEvent(
   event: webhook.Event,
 ): event is webhook.MessageEvent & {
   message: webhook.TextMessageContent;
@@ -18,6 +23,19 @@ function isExpenseInputEvent(
   return (
     event.type === "message" &&
     event.message.type === "text" &&
+    !!event.replyToken
+  );
+}
+
+function isImageInputEvent(
+  event: webhook.Event,
+): event is webhook.MessageEvent & {
+  message: webhook.ImageMessageContent;
+  replyToken: string;
+} {
+  return (
+    event.type === "message" &&
+    event.message.type === "image" &&
     !!event.replyToken
   );
 }
@@ -52,12 +70,24 @@ export async function POST(req: Request): Promise<Response> {
         isApproved: action === "ok",
         pendingWebhookEventId,
       });
-    } else if (isExpenseInputEvent(event)) {
+    } else if (isTextInputEvent(event)) {
+      const text = event.message.text;
       await respondToExpense({
         userId,
         replyToken: event.replyToken,
-        text: event.message.text,
         webhookEventId: event.webhookEventId,
+        parseInput: () => parseExpenseFromText(text),
+      });
+    } else if (isImageInputEvent(event)) {
+      const messageId = event.message.id;
+      await respondToExpense({
+        userId,
+        replyToken: event.replyToken,
+        webhookEventId: event.webhookEventId,
+        parseInput: async () => {
+          const { data, mimeType } = await getImageContent(messageId);
+          return parseExpenseFromImage(data, mimeType);
+        },
       });
     }
   }
