@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AskAi } from "./_ports/ai";
-import { parseExpenseFromImage, parseExpenseFromText } from "./parse-expense";
+import { parseImageToExpense, parseTextToExpense } from "./parse-expense";
 
 const VALID_EXPENSE_JSON = JSON.stringify({
   date: "2026-01-15",
@@ -11,7 +11,7 @@ const VALID_EXPENSE_JSON = JSON.stringify({
 describe("テキストから支出を解析する", () => {
   it("有効なJSONから支出を返す", async () => {
     const askAi = vi.fn<AskAi>().mockResolvedValue(VALID_EXPENSE_JSON);
-    const result = await parseExpenseFromText({
+    const result = await parseTextToExpense({
       askAi,
       text: "コーヒー 500円",
     });
@@ -29,7 +29,7 @@ describe("テキストから支出を解析する", () => {
         JSON.stringify({ date: "not-a-date", amount: 500, category: "食費" }),
       );
     await expect(
-      parseExpenseFromText({ askAi, text: "コーヒー" }),
+      parseTextToExpense({ askAi, text: "コーヒー" }),
     ).rejects.toThrow("Invalid date");
   });
 
@@ -42,7 +42,7 @@ describe("テキストから支出を解析する", () => {
       }),
     );
     await expect(
-      parseExpenseFromText({ askAi, text: "コーヒー" }),
+      parseTextToExpense({ askAi, text: "コーヒー" }),
     ).rejects.toThrow("Invalid category");
   });
 });
@@ -50,7 +50,7 @@ describe("テキストから支出を解析する", () => {
 describe("画像から支出を解析する", () => {
   it("有効なJSONから支出を返す", async () => {
     const askAi = vi.fn<AskAi>().mockResolvedValue(VALID_EXPENSE_JSON);
-    const result = await parseExpenseFromImage({
+    const result = await parseImageToExpense({
       askAi,
       imageBase64: "base64data",
       mimeType: "image/jpeg",

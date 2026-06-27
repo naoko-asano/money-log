@@ -16,7 +16,7 @@ const EXPENSE_SCHEMA = {
   required: ["date", "amount", "category"],
 };
 
-export async function parseExpenseFromText({
+export async function parseTextToExpense({
   askAi,
   text,
 }: {
@@ -31,7 +31,7 @@ export async function parseExpenseFromText({
   return toExpense(result);
 }
 
-export async function parseExpenseFromImage({
+export async function parseImageToExpense({
   askAi,
   imageBase64,
   mimeType,

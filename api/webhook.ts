@@ -3,8 +3,8 @@ import { askAi } from "./_infrastructure/ai/index.js";
 import { getImageContent } from "./_lib/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import {
-  parseExpenseFromImage,
-  parseExpenseFromText,
+  parseImageToExpense,
+  parseTextToExpense,
 } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
 import { respondToExpense } from "./_usecases/respond-to-expense.js";
@@ -45,7 +45,7 @@ export async function POST(req: Request): Promise<Response> {
         userId,
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
-        parseInput: () => parseExpenseFromText({ askAi, text }),
+        parseInput: () => parseTextToExpense({ askAi, text }),
       });
     } else if (isImageInputEvent(event)) {
       const messageId = event.message.id;
@@ -55,7 +55,7 @@ export async function POST(req: Request): Promise<Response> {
         webhookEventId: event.webhookEventId,
         parseInput: async () => {
           const { data, mimeType } = await getImageContent(messageId);
-          return parseExpenseFromImage({ askAi, imageBase64: data, mimeType });
+          return parseImageToExpense({ askAi, imageBase64: data, mimeType });
         },
       });
     }
