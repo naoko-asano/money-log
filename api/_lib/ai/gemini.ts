@@ -1,7 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { isImageItem, type Params } from "./index.js";
 
-const client = new GoogleGenAI({ apiKey: process.env.AI_API_KEY ?? "" });
+function createClient(): GoogleGenAI {
+  const apiKey = process.env.AI_API_KEY;
+  if (!apiKey) throw new Error("AI_API_KEY is not set");
+  return new GoogleGenAI({ apiKey });
+}
+
 const MODEL = "gemini-3.1-flash-lite";
 
 function convertGeminiContents(contents: Params["contents"]) {
@@ -18,7 +23,7 @@ export async function askAi({
   systemPrompt,
   responseSchema,
 }: Params): Promise<string> {
-  const response = await client.models.generateContent({
+  const response = await createClient().models.generateContent({
     model: MODEL,
     contents: convertGeminiContents(contents),
     config: {
