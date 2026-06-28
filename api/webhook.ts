@@ -1,6 +1,8 @@
 import type { webhook } from "@line/bot-sdk";
 import { askAi } from "./_infrastructure/ai/index.js";
-import { getImageContent } from "./_lib/messaging/index.js";
+import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
+import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
+import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import {
   parseImageToExpense,
@@ -46,6 +48,9 @@ export async function POST(req: Request): Promise<Response> {
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
         parseInput: () => parseTextToExpense({ askAi, text }),
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     } else if (isImageInputEvent(event)) {
       const messageId = event.message.id;
@@ -54,9 +59,12 @@ export async function POST(req: Request): Promise<Response> {
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
         parseInput: async () => {
-          const { data, mimeType } = await getImageContent(messageId);
+          const { data, mimeType } = await mediaReader.read(messageId);
           return parseImageToExpense({ askAi, imageBase64: data, mimeType });
         },
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     }
   }

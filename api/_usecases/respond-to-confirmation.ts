@@ -3,7 +3,7 @@ import {
   deletePendingExpense,
   getPendingExpense,
 } from "../../shared/db/pending-expenses.js";
-import { replyText } from "../_lib/messaging/index.js";
+import { replyText } from "../_infrastructure/messaging/index.js";
 
 type Args = {
   userId: string;
