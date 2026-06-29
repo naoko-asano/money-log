@@ -29,7 +29,7 @@ function createExpensesRepo(
 ): ExpensesRepo {
   return {
     exists: vi.fn().mockResolvedValue(false),
-    create: vi.fn().mockResolvedValue(undefined),
+    createFromPending: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -49,16 +49,17 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("承認された場合、支出を登録してメッセージを送信する", async () => {
     const messaging = createMessaging();
     const expensesRepo = createExpensesRepo();
+    const pendingExpensesRepo = createPendingExpensesRepo();
 
     await respondToConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       messaging,
       expensesRepo,
-      pendingExpensesRepo: createPendingExpensesRepo(),
+      pendingExpensesRepo,
     });
 
-    expect(expensesRepo.create).toHaveBeenCalledOnce();
+    expect(expensesRepo.createFromPending).toHaveBeenCalledOnce();
     expect(messaging.replyText).toHaveBeenCalledOnce();
     expect(messaging.replyText).toHaveBeenCalledWith({
       replyToken: "reply-token",
@@ -80,7 +81,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     });
 
     expect(pendingExpensesRepo.delete).toHaveBeenCalledOnce();
-    expect(expensesRepo.create).not.toHaveBeenCalled();
+    expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
     expect(messaging.replyText).toHaveBeenCalledOnce();
     expect(messaging.replyText).toHaveBeenCalledWith({
       replyToken: "reply-token",
@@ -107,7 +108,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       replyToken: "reply-token",
       text: "確認待ちの支出はありません。",
     });
-    expect(expensesRepo.create).not.toHaveBeenCalled();
+    expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
   });
 
   it("異なる webhookEventId の場合、何もしない", async () => {
@@ -125,7 +126,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     });
 
     expect(messaging.replyText).not.toHaveBeenCalled();
-    expect(expensesRepo.create).not.toHaveBeenCalled();
+    expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
     expect(pendingExpensesRepo.delete).not.toHaveBeenCalled();
   });
 });

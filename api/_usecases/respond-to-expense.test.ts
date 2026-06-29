@@ -33,7 +33,7 @@ function createExpensesRepo(
 ): ExpensesRepo {
   return {
     exists: vi.fn().mockResolvedValue(false),
-    create: vi.fn().mockResolvedValue(undefined),
+    createFromPending: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

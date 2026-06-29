@@ -34,7 +34,7 @@ export async function respondToConfirmation({
   if (pendingExpense.webhookEventId !== pendingWebhookEventId) return;
 
   if (isApproved) {
-    await expensesRepo.create(userId, pendingExpense);
+    await expensesRepo.createFromPending(userId, pendingExpense);
     await messaging.replyText({ replyToken, text: "登録しました！" });
     return;
   }
