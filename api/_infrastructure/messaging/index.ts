@@ -4,4 +4,3 @@ import { getImageContent, replyText, replyWithQuickReply } from "./line.js";
 
 export const messaging: Messaging = { replyText, replyWithQuickReply };
 export const mediaReader: MediaReader = { read: getImageContent };
-export { replyText };

@@ -40,6 +40,9 @@ export async function POST(req: Request): Promise<Response> {
         replyToken: event.replyToken,
         isApproved: action === "ok",
         pendingWebhookEventId,
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     } else if (isTextInputEvent(event)) {
       const text = event.message.text;
