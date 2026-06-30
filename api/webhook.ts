@@ -1,15 +1,14 @@
 import type { webhook } from "@line/bot-sdk";
-import { askAi } from "./_infrastructure/ai/index.js";
+import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
 import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
-import {
-  parseImageToExpense,
-  parseTextToExpense,
-} from "./_usecases/parse-expense.js";
+import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
 import { respondToExpense } from "./_usecases/respond-to-expense.js";
+
+const expenseParser = createExpenseParser(ai);
 
 export async function POST(req: Request): Promise<Response> {
   const signature = req.headers.get("x-line-signature");
@@ -50,7 +49,7 @@ export async function POST(req: Request): Promise<Response> {
         userId,
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
-        parseInput: () => parseTextToExpense({ askAi, text }),
+        parseInput: () => expenseParser.fromText(text),
         messaging,
         expensesRepo,
         pendingExpensesRepo,
@@ -63,7 +62,7 @@ export async function POST(req: Request): Promise<Response> {
         webhookEventId: event.webhookEventId,
         parseInput: async () => {
           const { data, mimeType } = await mediaReader.read(messageId);
-          return parseImageToExpense({ askAi, imageBase64: data, mimeType });
+          return expenseParser.fromImage({ imageBase64: data, mimeType });
         },
         messaging,
         expensesRepo,

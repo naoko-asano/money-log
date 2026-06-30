@@ -4,7 +4,14 @@ import {
   isCategory,
 } from "../../shared/model/expense.js";
 import { getToday } from "../../shared/utils/date.js";
-import type { AskAi, ImageItem } from "./_ports/ai.js";
+import type { Ai, ImageItem } from "./_ports/ai.js";
+
+export function createExpenseParser(ai: Ai) {
+  return {
+    fromText: (text: string) => parseTextToExpense({ ai, text }),
+    fromImage: (image: ImageItem) => parseImageToExpense({ ai, ...image }),
+  };
+}
 
 const EXPENSE_SCHEMA = {
   type: "object",
@@ -16,14 +23,14 @@ const EXPENSE_SCHEMA = {
   required: ["date", "amount", "category"],
 };
 
-export async function parseTextToExpense({
-  askAi,
+async function parseTextToExpense({
+  ai,
   text,
 }: {
-  askAi: AskAi;
+  ai: Ai;
   text: string;
 }): Promise<Expense> {
-  const result = await askAi({
+  const result = await ai.ask({
     contents: text,
     systemPrompt: buildSystemPrompt(),
     responseSchema: EXPENSE_SCHEMA,
@@ -31,12 +38,12 @@ export async function parseTextToExpense({
   return toExpense(result);
 }
 
-export async function parseImageToExpense({
-  askAi,
+async function parseImageToExpense({
+  ai,
   imageBase64,
   mimeType,
-}: { askAi: AskAi } & ImageItem): Promise<Expense> {
-  const result = await askAi({
+}: { ai: Ai } & ImageItem): Promise<Expense> {
+  const result = await ai.ask({
     contents: [
       { mimeType, imageBase64 },
       { text: "この領収書から支出情報を読み取ってください" },

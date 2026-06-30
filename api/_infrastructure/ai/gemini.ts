@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type {
-  AskAiArgs,
+  AskArgs,
   ImageItem,
   InputItem,
 } from "../../_usecases/_ports/ai.js";
@@ -15,7 +15,7 @@ export async function askAi({
   contents,
   systemPrompt,
   responseSchema,
-}: AskAiArgs): Promise<string> {
+}: AskArgs): Promise<string> {
   const response = await createClient().models.generateContent({
     model: MODEL,
     contents: convertGeminiContents(contents),
@@ -36,7 +36,7 @@ function createClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
-function convertGeminiContents(contents: AskAiArgs["contents"]) {
+function convertGeminiContents(contents: AskArgs["contents"]) {
   if (typeof contents === "string") return contents;
   return contents.map((item) =>
     isImageItem(item)
