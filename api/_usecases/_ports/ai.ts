@@ -9,7 +9,3 @@ export type AskAiArgs = {
 };
 
 export type AskAi = (args: AskAiArgs) => Promise<string>;
-
-export function isImageItem(item: InputItem): item is ImageItem {
-  return "imageBase64" in item;
-}

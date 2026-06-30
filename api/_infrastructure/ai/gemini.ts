@@ -1,5 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
-import { type AskAiArgs, isImageItem } from "../../_usecases/_ports/ai.js";
+import type {
+  AskAiArgs,
+  ImageItem,
+  InputItem,
+} from "../../_usecases/_ports/ai.js";
+
+function isImageItem(item: InputItem): item is ImageItem {
+  return "imageBase64" in item;
+}
 
 const MODEL = "gemini-3.1-flash-lite";
 
