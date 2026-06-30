@@ -6,13 +6,6 @@ import {
 import { getToday } from "../../shared/utils/date.js";
 import type { Ai, ImageItem } from "./_ports/ai.js";
 
-export function createExpenseParser(ai: Ai) {
-  return {
-    fromText: (text: string) => parseTextToExpense({ ai, text }),
-    fromImage: (image: ImageItem) => parseImageToExpense({ ai, ...image }),
-  };
-}
-
 const EXPENSE_SCHEMA = {
   type: "object",
   properties: {
@@ -22,6 +15,13 @@ const EXPENSE_SCHEMA = {
   },
   required: ["date", "amount", "category"],
 };
+
+export function createExpenseParser(ai: Ai) {
+  return {
+    fromText: (text: string) => parseTextToExpense({ ai, text }),
+    fromImage: (image: ImageItem) => parseImageToExpense({ ai, ...image }),
+  };
+}
 
 async function parseTextToExpense({
   ai,

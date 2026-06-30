@@ -5,10 +5,6 @@ import type {
   InputItem,
 } from "../../_usecases/_ports/ai.js";
 
-function isImageItem(item: InputItem): item is ImageItem {
-  return "imageBase64" in item;
-}
-
 const MODEL = "gemini-3.1-flash-lite";
 
 export async function askAi({
@@ -43,4 +39,8 @@ function convertGeminiContents(contents: AskArgs["contents"]) {
       ? { inlineData: { mimeType: item.mimeType, data: item.imageBase64 } }
       : item,
   );
+}
+
+function isImageItem(item: InputItem): item is ImageItem {
+  return "imageBase64" in item;
 }
