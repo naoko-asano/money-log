@@ -1,12 +1,14 @@
 import type { webhook } from "@line/bot-sdk";
-import { getImageContent } from "./_lib/messaging/index.js";
+import { ai } from "./_infrastructure/ai/index.js";
+import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
+import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
+import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
-import {
-  parseExpenseFromImage,
-  parseExpenseFromText,
-} from "./_usecases/parse-expense.js";
+import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
 import { respondToExpense } from "./_usecases/respond-to-expense.js";
+
+const expenseParser = createExpenseParser(ai);
 
 export async function POST(req: Request): Promise<Response> {
   const signature = req.headers.get("x-line-signature");
@@ -37,6 +39,9 @@ export async function POST(req: Request): Promise<Response> {
         replyToken: event.replyToken,
         isApproved: action === "ok",
         pendingWebhookEventId,
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     } else if (isTextInputEvent(event)) {
       const text = event.message.text;
@@ -44,7 +49,10 @@ export async function POST(req: Request): Promise<Response> {
         userId,
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
-        parseInput: () => parseExpenseFromText(text),
+        parseInput: () => expenseParser.fromText(text),
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     } else if (isImageInputEvent(event)) {
       const messageId = event.message.id;
@@ -53,9 +61,12 @@ export async function POST(req: Request): Promise<Response> {
         replyToken: event.replyToken,
         webhookEventId: event.webhookEventId,
         parseInput: async () => {
-          const { data, mimeType } = await getImageContent(messageId);
-          return parseExpenseFromImage(data, mimeType);
+          const { data, mimeType } = await mediaReader.read(messageId);
+          return expenseParser.fromImage({ imageBase64: data, mimeType });
         },
+        messaging,
+        expensesRepo,
+        pendingExpensesRepo,
       });
     }
   }

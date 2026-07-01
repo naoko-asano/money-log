@@ -1,18 +1,18 @@
-import { existsExpenseByWebhookEventId } from "../../shared/db/expenses.js";
-import {
-  createPendingExpense,
-  getPendingExpense,
-} from "../../shared/db/pending-expenses.js";
 import type { Expense } from "../../shared/model/expense.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
-import { replyText, replyWithQuickReply } from "../_lib/messaging/index.js";
+import type { ExpensesRepo } from "./_ports/expenses-repo.js";
+import type { Messaging } from "./_ports/messaging.js";
+import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo.js";
 
 type Args = {
   userId: string;
   replyToken: string;
   webhookEventId: string;
   parseInput: () => Promise<Expense>;
+  messaging: Messaging;
+  expensesRepo: ExpensesRepo;
+  pendingExpensesRepo: PendingExpensesRepo;
 };
 
 export async function respondToExpense({
@@ -20,49 +20,59 @@ export async function respondToExpense({
   replyToken,
   webhookEventId,
   parseInput,
+  messaging,
+  expensesRepo,
+  pendingExpensesRepo,
 }: Args): Promise<void> {
-  const pendingExpense = await getPendingExpense(userId);
+  const pendingExpense = await pendingExpensesRepo.get(userId);
 
   if (pendingExpense) {
     await askForConfirmation({
       expense: pendingExpense,
       replyToken,
       hasPendingExpense: true,
+      messaging,
     });
     return;
   }
 
   // NOTE: 再送を考慮
-  if (await existsExpenseByWebhookEventId(webhookEventId)) return;
+  if (await expensesRepo.exists(webhookEventId)) return;
 
   let expense: Expense;
   try {
     expense = await parseInput();
   } catch (e) {
     console.error("parseInput failed:", e);
-    await replyText({
+    await messaging.replyText({
       replyToken,
       text: "解析できませんでした。もう一度お試しください。",
     });
     return;
   }
   console.log("parsed expense:", expense);
-  const created = await createPendingExpense(userId, expense, webhookEventId);
+  const created = await pendingExpensesRepo.create(
+    userId,
+    expense,
+    webhookEventId,
+  );
   if (created) {
     await askForConfirmation({
       expense: created,
       replyToken,
       hasPendingExpense: false,
+      messaging,
     });
     return;
   }
 
-  const existing = await getPendingExpense(userId);
+  const existing = await pendingExpensesRepo.get(userId);
   if (existing) {
     await askForConfirmation({
       expense: existing,
       replyToken,
       hasPendingExpense: true,
+      messaging,
     });
   }
 }
@@ -94,17 +104,20 @@ async function askForConfirmation({
   expense,
   replyToken,
   hasPendingExpense,
+  messaging,
 }: {
   expense: PendingExpense;
   replyToken: string;
   hasPendingExpense: boolean;
+  messaging: Messaging;
 }): Promise<void> {
   const items = buildConfirmationItems(expense.webhookEventId);
   const baseReply = `${formatDate(expense.date)}\n${expense.category}: ${expense.amount.toLocaleString("ja-JP")}円\nで登録します。\nよろしいですか？`;
   const reply = hasPendingExpense
     ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
     : baseReply;
-  await replyWithQuickReply({
+
+  await messaging.replyWithQuickReply({
     replyToken,
     text: reply,
     items,

@@ -1,47 +1,39 @@
 import type { Readable } from "node:stream";
-import type { messagingApi as messagingApiTypes } from "@line/bot-sdk";
 import { messagingApi } from "@line/bot-sdk";
+import type { MediaReader } from "../../_usecases/_ports/media-reader.js";
+import type { Messaging } from "../../_usecases/_ports/messaging.js";
 
-export async function replyText({
+export const replyText: Messaging["replyText"] = async ({
   replyToken,
   text,
-}: {
-  replyToken: string;
-  text: string;
-}): Promise<void> {
+}) => {
   const client = createClient();
   await client.replyMessage({
     replyToken,
     messages: [{ type: "text", text }],
   });
-}
+};
 
-export async function replyWithQuickReply({
+export const replyWithQuickReply: Messaging["replyWithQuickReply"] = async ({
   replyToken,
   text,
   items,
-}: {
-  replyToken: string;
-  text: string;
-  items: messagingApiTypes.QuickReplyItem[];
-}): Promise<void> {
+}) => {
   const client = createClient();
   await client.replyMessage({
     replyToken,
     messages: [{ type: "text", text, quickReply: { items } }],
   });
-}
+};
 
-export async function getImageContent(
-  messageId: string,
-): Promise<{ data: string; mimeType: string }> {
+export const getImageContent: MediaReader["read"] = async (messageId) => {
   const client = createBlobClient();
   const { httpResponse, body } =
     await client.getMessageContentWithHttpInfo(messageId);
   const mimeType = httpResponse.headers.get("content-type") ?? "image/jpeg";
   const data = await streamToBase64(body);
   return { data, mimeType };
-}
+};
 
 function getToken(): string {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
