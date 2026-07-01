@@ -116,6 +116,7 @@ async function askForConfirmation({
   const reply = hasPendingExpense
     ? `先に確認中の支出を「はい」か「いいえ」で回答してください。\n${baseReply}`
     : baseReply;
+
   await messaging.replyWithQuickReply({
     replyToken,
     text: reply,

@@ -64,6 +64,13 @@ describe("支出が入力された場合", () => {
 
     expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
     expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
+    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.not.stringContaining(
+          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+        ),
+      }),
+    );
     expect(messaging.replyText).not.toHaveBeenCalled();
   });
 
@@ -83,6 +90,13 @@ describe("支出が入力された場合", () => {
 
     expect(parseInput).not.toHaveBeenCalled();
     expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
+    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining(
+          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+        ),
+      }),
+    );
     expect(messaging.replyText).not.toHaveBeenCalled();
   });
 
@@ -118,6 +132,7 @@ describe("支出が入力された場合", () => {
     });
 
     expect(pendingExpensesRepo.create).not.toHaveBeenCalled();
+    expect(messaging.replyText).toHaveBeenCalledOnce();
     expect(messaging.replyText).toHaveBeenCalledWith({
       replyToken: "reply-token",
       text: "解析できませんでした。もう一度お試しください。",
@@ -143,6 +158,13 @@ describe("支出が入力された場合", () => {
     });
 
     expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
+    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining(
+          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+        ),
+      }),
+    );
     expect(messaging.replyText).not.toHaveBeenCalled();
   });
 });
