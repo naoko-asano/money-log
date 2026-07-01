@@ -33,7 +33,12 @@ export async function POST(req: Request): Promise<Response> {
     if (!userId) continue;
 
     if (isConfirmationEvent(event)) {
-      const { action, pendingWebhookEventId } = JSON.parse(event.postback.data);
+      let action: string, pendingWebhookEventId: string;
+      try {
+        ({ action, pendingWebhookEventId } = JSON.parse(event.postback.data));
+      } catch {
+        continue;
+      }
       await respondToConfirmation({
         userId,
         replyToken: event.replyToken,
