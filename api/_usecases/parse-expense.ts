@@ -30,7 +30,7 @@ async function parseTextToExpense({
   ai: Ai;
   text: string;
 }): Promise<Expense> {
-  const result = await ai.ask({
+  const result = await ai.generateText({
     contents: text,
     systemPrompt: buildSystemPrompt(),
     responseSchema: EXPENSE_SCHEMA,
@@ -43,7 +43,7 @@ async function parseImageToExpense({
   imageBase64,
   mimeType,
 }: { ai: Ai } & ImageItem): Promise<Expense> {
-  const result = await ai.ask({
+  const result = await ai.generateText({
     contents: [
       { mimeType, imageBase64 },
       { text: "この領収書から支出情報を読み取ってください" },

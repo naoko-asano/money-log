@@ -9,7 +9,7 @@ const VALID_EXPENSE_JSON = JSON.stringify({
 });
 
 function createAi({ returnValue }: { returnValue: string }): Ai {
-  return { ask: vi.fn().mockResolvedValue(returnValue) };
+  return { generateText: vi.fn().mockResolvedValue(returnValue) };
 }
 
 describe("テキストから支出を解析する", () => {
