@@ -140,6 +140,73 @@ describe("支出が入力された場合", () => {
     expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
   });
 
+  it("確認待ち支出の取得に失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+    const parseInput = vi.fn();
+
+    await respondToExpense({
+      ...BASE_ARGS,
+      parseInput,
+      messaging,
+      expensesRepo: createExpensesRepo(),
+      pendingExpensesRepo: createPendingExpensesRepo({
+        get: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+    });
+
+    expect(parseInput).not.toHaveBeenCalled();
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+  });
+
+  it("支出の存在確認に失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+    const parseInput = vi.fn();
+
+    await respondToExpense({
+      ...BASE_ARGS,
+      parseInput,
+      messaging,
+      expensesRepo: createExpensesRepo({
+        exists: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+      pendingExpensesRepo: createPendingExpensesRepo(),
+    });
+
+    expect(parseInput).not.toHaveBeenCalled();
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+  });
+
+  it("確認待ち支出の作成に失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+
+    await respondToExpense({
+      ...BASE_ARGS,
+      parseInput: vi.fn().mockResolvedValue(EXPENSE),
+      messaging,
+      expensesRepo: createExpensesRepo(),
+      pendingExpensesRepo: createPendingExpensesRepo({
+        create: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+    });
+
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+  });
+
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
     const messaging = createMessaging();
 

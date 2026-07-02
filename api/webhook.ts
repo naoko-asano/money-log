@@ -3,6 +3,7 @@ import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
 import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
+import { DEFAULT_USER_ERROR_TEXT } from "./_lib/handle-error.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
@@ -32,47 +33,79 @@ export async function POST(req: Request): Promise<Response> {
     const userId = event.source?.userId;
     if (!userId) continue;
 
-    if (isConfirmationEvent(event)) {
-      let action: string, pendingWebhookEventId: string;
-      try {
-        ({ action, pendingWebhookEventId } = JSON.parse(event.postback.data));
-      } catch {
-        continue;
+    try {
+      if (isConfirmationEvent(event)) {
+        let action: string, pendingWebhookEventId: string;
+        try {
+          ({ action, pendingWebhookEventId } = JSON.parse(event.postback.data));
+        } catch {
+          console.error(
+            `webhook invalid postback.data (userId: ${userId}, webhookEventId: ${event.webhookEventId}):`,
+            event.postback.data,
+          );
+          continue;
+        }
+        if (
+          typeof action !== "string" ||
+          typeof pendingWebhookEventId !== "string"
+        ) {
+          console.error(
+            `webhook unexpected postback.data shape (userId: ${userId}, webhookEventId: ${event.webhookEventId}):`,
+            event.postback.data,
+          );
+          continue;
+        }
+        await respondToConfirmation({
+          userId,
+          replyToken: event.replyToken,
+          isApproved: action === "ok",
+          pendingWebhookEventId,
+          messaging,
+          expensesRepo,
+          pendingExpensesRepo,
+        });
+      } else if (isTextInputEvent(event)) {
+        const text = event.message.text;
+        await respondToExpense({
+          userId,
+          replyToken: event.replyToken,
+          webhookEventId: event.webhookEventId,
+          parseInput: () => expenseParser.fromText(text),
+          messaging,
+          expensesRepo,
+          pendingExpensesRepo,
+        });
+      } else if (isImageInputEvent(event)) {
+        const messageId = event.message.id;
+        await respondToExpense({
+          userId,
+          replyToken: event.replyToken,
+          webhookEventId: event.webhookEventId,
+          parseInput: async () => {
+            const { data, mimeType } = await mediaReader.read(messageId);
+            return expenseParser.fromImage({ imageBase64: data, mimeType });
+          },
+          messaging,
+          expensesRepo,
+          pendingExpensesRepo,
+        });
       }
-      await respondToConfirmation({
-        userId,
-        replyToken: event.replyToken,
-        isApproved: action === "ok",
-        pendingWebhookEventId,
-        messaging,
-        expensesRepo,
-        pendingExpensesRepo,
-      });
-    } else if (isTextInputEvent(event)) {
-      const text = event.message.text;
-      await respondToExpense({
-        userId,
-        replyToken: event.replyToken,
-        webhookEventId: event.webhookEventId,
-        parseInput: () => expenseParser.fromText(text),
-        messaging,
-        expensesRepo,
-        pendingExpensesRepo,
-      });
-    } else if (isImageInputEvent(event)) {
-      const messageId = event.message.id;
-      await respondToExpense({
-        userId,
-        replyToken: event.replyToken,
-        webhookEventId: event.webhookEventId,
-        parseInput: async () => {
-          const { data, mimeType } = await mediaReader.read(messageId);
-          return expenseParser.fromImage({ imageBase64: data, mimeType });
-        },
-        messaging,
-        expensesRepo,
-        pendingExpensesRepo,
-      });
+    } catch (error) {
+      console.error(
+        `webhook event processing failed (userId: ${userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
+        error,
+      );
+      const replyToken = (event as { replyToken?: string }).replyToken;
+      if (replyToken) {
+        try {
+          await messaging.replyText({
+            replyToken,
+            text: DEFAULT_USER_ERROR_TEXT,
+          });
+        } catch {
+          // replyToken が失効している場合は無視
+        }
+      }
     }
   }
 

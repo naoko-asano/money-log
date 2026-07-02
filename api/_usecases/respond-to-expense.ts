@@ -1,6 +1,7 @@
 import type { Expense } from "../../shared/model/expense.js";
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { formatDate } from "../../shared/utils/date.js";
+import { DEFAULT_USER_ERROR_TEXT, handleError } from "../_lib/handle-error.js";
 import type { ExpensesRepo } from "./_ports/expenses-repo.js";
 import type { Messaging } from "./_ports/messaging.js";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo.js";
@@ -24,7 +25,21 @@ export async function respondToExpense({
   expensesRepo,
   pendingExpensesRepo,
 }: Args): Promise<void> {
-  const pendingExpense = await pendingExpensesRepo.get(userId);
+  let pendingExpense: PendingExpense | null;
+  try {
+    pendingExpense = await pendingExpensesRepo.get(userId);
+  } catch (error) {
+    await handleError({
+      error,
+      label: "pendingExpensesRepo.get",
+      notify: () =>
+        messaging.replyText({
+          replyToken,
+          text: DEFAULT_USER_ERROR_TEXT,
+        }),
+    });
+    return;
+  }
 
   if (pendingExpense) {
     await askForConfirmation({
@@ -37,25 +52,53 @@ export async function respondToExpense({
   }
 
   // NOTE: 再送を考慮
-  if (await expensesRepo.exists(webhookEventId)) return;
+  try {
+    if (await expensesRepo.exists(webhookEventId)) return;
+  } catch (error) {
+    await handleError({
+      error,
+      label: "expensesRepo.exists",
+      notify: () =>
+        messaging.replyText({
+          replyToken,
+          text: DEFAULT_USER_ERROR_TEXT,
+        }),
+    });
+    return;
+  }
 
   let expense: Expense;
   try {
     expense = await parseInput();
-  } catch (e) {
-    console.error("parseInput failed:", e);
-    await messaging.replyText({
-      replyToken,
-      text: "解析できませんでした。もう一度お試しください。",
+  } catch (error) {
+    await handleError({
+      error,
+      label: "parseInput",
+      notify: () =>
+        messaging.replyText({
+          replyToken,
+          text: "解析できませんでした。もう一度お試しください。",
+        }),
     });
     return;
   }
   console.log("parsed expense:", expense);
-  const created = await pendingExpensesRepo.create(
-    userId,
-    expense,
-    webhookEventId,
-  );
+
+  let created: PendingExpense | null;
+  try {
+    created = await pendingExpensesRepo.create(userId, expense, webhookEventId);
+  } catch (error) {
+    await handleError({
+      error,
+      label: "pendingExpensesRepo.create",
+      notify: () =>
+        messaging.replyText({
+          replyToken,
+          text: DEFAULT_USER_ERROR_TEXT,
+        }),
+    });
+    return;
+  }
   if (created) {
     await askForConfirmation({
       expense: created,
@@ -66,6 +109,7 @@ export async function respondToExpense({
     return;
   }
 
+  // 競合リカバリの例外的なパスのため、エラーは webhook.ts の catch に委ねる
   const existing = await pendingExpensesRepo.get(userId);
   if (existing) {
     await askForConfirmation({

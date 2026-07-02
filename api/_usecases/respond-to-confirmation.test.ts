@@ -111,6 +111,68 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
   });
 
+  it("確認待ち支出の取得に失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+    const expensesRepo = createExpensesRepo();
+
+    await respondToConfirmation({
+      ...BASE_ARGS,
+      isApproved: true,
+      messaging,
+      expensesRepo,
+      pendingExpensesRepo: createPendingExpensesRepo({
+        get: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+    });
+
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+    expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
+  });
+
+  it("承認時にDBへの書き込みに失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+
+    await respondToConfirmation({
+      ...BASE_ARGS,
+      isApproved: true,
+      messaging,
+      expensesRepo: createExpensesRepo({
+        createFromPending: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+      pendingExpensesRepo: createPendingExpensesRepo(),
+    });
+
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "登録に失敗しました。もう一度お試しください。",
+    });
+  });
+
+  it("キャンセル時にDBの削除に失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+
+    await respondToConfirmation({
+      ...BASE_ARGS,
+      isApproved: false,
+      messaging,
+      expensesRepo: createExpensesRepo(),
+      pendingExpensesRepo: createPendingExpensesRepo({
+        delete: vi.fn().mockRejectedValue(new Error("db error")),
+      }),
+    });
+
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+  });
+
   it("異なる webhookEventId の場合、何もしない", async () => {
     const messaging = createMessaging();
     const expensesRepo = createExpensesRepo();
