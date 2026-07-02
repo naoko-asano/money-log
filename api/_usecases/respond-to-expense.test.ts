@@ -207,6 +207,31 @@ describe("支出が入力された場合", () => {
     expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
   });
 
+  it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーメッセージを送信する", async () => {
+    const messaging = createMessaging();
+
+    await respondToExpense({
+      ...BASE_ARGS,
+      parseInput: vi.fn().mockResolvedValue(EXPENSE),
+      messaging,
+      expensesRepo: createExpensesRepo(),
+      pendingExpensesRepo: createPendingExpensesRepo({
+        create: vi.fn().mockResolvedValue(null),
+        get: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockRejectedValueOnce(new Error("db error")),
+      }),
+    });
+
+    expect(messaging.replyText).toHaveBeenCalledOnce();
+    expect(messaging.replyText).toHaveBeenCalledWith({
+      replyToken: "reply-token",
+      text: "エラーが発生しました。しばらく経ってからお試しください。",
+    });
+    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+  });
+
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
     const messaging = createMessaging();
 

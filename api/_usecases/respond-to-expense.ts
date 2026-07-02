@@ -109,8 +109,21 @@ export async function respondToExpense({
     return;
   }
 
-  // 競合リカバリの例外的なパスのため、エラーは webhook.ts の catch に委ねる
-  const existing = await pendingExpensesRepo.get(userId);
+  let existing: PendingExpense | null;
+  try {
+    existing = await pendingExpensesRepo.get(userId);
+  } catch (error) {
+    await handleError({
+      error,
+      label: "pendingExpensesRepo.get",
+      notify: () =>
+        messaging.replyText({
+          replyToken,
+          text: DEFAULT_USER_ERROR_TEXT,
+        }),
+    });
+    return;
+  }
   if (existing) {
     await askForConfirmation({
       expense: existing,
