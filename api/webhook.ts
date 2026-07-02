@@ -35,31 +35,18 @@ export async function POST(req: Request): Promise<Response> {
 
     try {
       if (isConfirmationEvent(event)) {
-        let action: string, pendingWebhookEventId: string;
-        try {
-          ({ action, pendingWebhookEventId } = JSON.parse(event.postback.data));
-        } catch {
-          console.error(
-            `webhook invalid postback.data (userId: ${userId}, webhookEventId: ${event.webhookEventId}):`,
-            event.postback.data,
-          );
-          continue;
-        }
-        if (
-          typeof action !== "string" ||
-          typeof pendingWebhookEventId !== "string"
-        ) {
-          console.error(
-            `webhook unexpected postback.data shape (userId: ${userId}, webhookEventId: ${event.webhookEventId}):`,
-            event.postback.data,
-          );
-          continue;
-        }
+        const confirmation = parseConfirmation(
+          event.postback.data,
+          userId,
+          event.webhookEventId,
+        );
+
+        if (!confirmation) continue;
         await respondToConfirmation({
           userId,
           replyToken: event.replyToken,
-          isApproved: action === "ok",
-          pendingWebhookEventId,
+          isApproved: confirmation.action === "ok",
+          pendingWebhookEventId: confirmation.pendingWebhookEventId,
           messaging,
           expensesRepo,
           pendingExpensesRepo,
@@ -142,4 +129,33 @@ function isImageInputEvent(
     event.message.type === "image" &&
     !!event.replyToken
   );
+}
+
+function parseConfirmation(
+  rawJson: string,
+  userId: string,
+  webhookEventId: string,
+): { action: string; pendingWebhookEventId: string } | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawJson);
+  } catch {
+    console.error(
+      `webhook invalid postback.data (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      rawJson,
+    );
+    return null;
+  }
+  if (
+    typeof (parsed as { action?: unknown }).action !== "string" ||
+    typeof (parsed as { pendingWebhookEventId?: unknown })
+      .pendingWebhookEventId !== "string"
+  ) {
+    console.error(
+      `webhook unexpected postback.data shape (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      rawJson,
+    );
+    return null;
+  }
+  return parsed as { action: string; pendingWebhookEventId: string };
 }
