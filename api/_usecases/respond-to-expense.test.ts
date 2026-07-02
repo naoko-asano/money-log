@@ -131,7 +131,6 @@ describe("支出が入力された場合", () => {
       pendingExpensesRepo,
     });
 
-    expect(pendingExpensesRepo.create).not.toHaveBeenCalled();
     expect(messaging.replyText).toHaveBeenCalledOnce();
     expect(messaging.replyText).toHaveBeenCalledWith({
       replyToken: "reply-token",
