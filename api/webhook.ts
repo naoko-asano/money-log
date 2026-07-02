@@ -3,7 +3,6 @@ import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
 import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
-import { DEFAULT_USER_ERROR_TEXT } from "./_lib/handle-error.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
@@ -82,17 +81,6 @@ export async function POST(req: Request): Promise<Response> {
         `webhook event processing failed (userId: ${userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
         error,
       );
-      const replyToken = (event as { replyToken?: string }).replyToken;
-      if (replyToken) {
-        try {
-          await messaging.replyText({
-            replyToken,
-            text: DEFAULT_USER_ERROR_TEXT,
-          });
-        } catch {
-          // replyToken が失効している場合は無視
-        }
-      }
     }
   }
 
