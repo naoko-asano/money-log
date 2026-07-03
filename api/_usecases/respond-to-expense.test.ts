@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
-import type { Messaging } from "./_ports/messaging";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
+import type { Reply } from "./_ports/reply";
 import { respondToExpense } from "./respond-to-expense";
 
 const EXPENSE = {
@@ -17,14 +17,13 @@ const PENDING_EXPENSE = {
 
 const BASE_ARGS = {
   userId: "user-001",
-  replyToken: "reply-token",
   webhookEventId: "event-001",
 };
 
-function createMessaging(): Messaging {
+function createReply(): Reply {
   return {
-    replyText: vi.fn().mockResolvedValue(undefined),
-    replyWithQuickReply: vi.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue(undefined),
+    sendWithQuickItems: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -51,37 +50,36 @@ function createPendingExpensesRepo(
 
 describe("支出が入力された場合", () => {
   it("支出の解析に成功した場合、確認待ち支出を作成して確認メッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo,
     });
 
     expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.not.stringContaining(
-          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
-        ),
-      }),
+    expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
+    expect(reply.sendWithQuickItems).toHaveBeenCalledWith(
+      expect.not.stringContaining(
+        "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+      ),
+      expect.any(Array),
     );
-    expect(messaging.replyText).not.toHaveBeenCalled();
+    expect(reply.send).not.toHaveBeenCalled();
   });
 
   it("確認待ちの支出がある場合、確認メッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const parseInput = vi.fn();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput,
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
@@ -89,25 +87,24 @@ describe("支出が入力された場合", () => {
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining(
-          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
-        ),
-      }),
+    expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
+    expect(reply.sendWithQuickItems).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+      ),
+      expect.any(Array),
     );
-    expect(messaging.replyText).not.toHaveBeenCalled();
+    expect(reply.send).not.toHaveBeenCalled();
   });
 
   it("同じ webhookEventId の支出が既に存在する場合、何も送信しない", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const parseInput = vi.fn();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput,
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo({
         exists: vi.fn().mockResolvedValue(true),
       }),
@@ -115,38 +112,37 @@ describe("支出が入力された場合", () => {
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(messaging.replyText).not.toHaveBeenCalled();
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).not.toHaveBeenCalled();
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("入力の解析に失敗した場合、エラーメッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput: vi.fn().mockRejectedValue(new Error("parse error")),
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo,
     });
 
-    expect(messaging.replyText).toHaveBeenCalledOnce();
-    expect(messaging.replyText).toHaveBeenCalledWith({
-      replyToken: "reply-token",
-      text: "解析できませんでした。もう一度お試しください。",
-    });
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledOnce();
+    expect(reply.send).toHaveBeenCalledWith(
+      "解析できませんでした。もう一度お試しください。",
+    );
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の取得に失敗した場合、エラーメッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const parseInput = vi.fn();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput,
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockRejectedValue(new Error("db error")),
@@ -154,22 +150,21 @@ describe("支出が入力された場合", () => {
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(messaging.replyText).toHaveBeenCalledOnce();
-    expect(messaging.replyText).toHaveBeenCalledWith({
-      replyToken: "reply-token",
-      text: "エラーが発生しました。しばらく経ってからお試しください。",
-    });
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledOnce();
+    expect(reply.send).toHaveBeenCalledWith(
+      "エラーが発生しました。しばらく経ってからお試しください。",
+    );
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("支出の存在確認に失敗した場合、エラーメッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
     const parseInput = vi.fn();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput,
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo({
         exists: vi.fn().mockRejectedValue(new Error("db error")),
       }),
@@ -177,42 +172,40 @@ describe("支出が入力された場合", () => {
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(messaging.replyText).toHaveBeenCalledOnce();
-    expect(messaging.replyText).toHaveBeenCalledWith({
-      replyToken: "reply-token",
-      text: "エラーが発生しました。しばらく経ってからお試しください。",
-    });
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledOnce();
+    expect(reply.send).toHaveBeenCalledWith(
+      "エラーが発生しました。しばらく経ってからお試しください。",
+    );
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の作成に失敗した場合、エラーメッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockRejectedValue(new Error("db error")),
       }),
     });
 
-    expect(messaging.replyText).toHaveBeenCalledOnce();
-    expect(messaging.replyText).toHaveBeenCalledWith({
-      replyToken: "reply-token",
-      text: "エラーが発生しました。しばらく経ってからお試しください。",
-    });
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledOnce();
+    expect(reply.send).toHaveBeenCalledWith(
+      "エラーが発生しました。しばらく経ってからお試しください。",
+    );
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーメッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
@@ -223,21 +216,20 @@ describe("支出が入力された場合", () => {
       }),
     });
 
-    expect(messaging.replyText).toHaveBeenCalledOnce();
-    expect(messaging.replyText).toHaveBeenCalledWith({
-      replyToken: "reply-token",
-      text: "エラーが発生しました。しばらく経ってからお試しください。",
-    });
-    expect(messaging.replyWithQuickReply).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledOnce();
+    expect(reply.send).toHaveBeenCalledWith(
+      "エラーが発生しました。しばらく経ってからお試しください。",
+    );
+    expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
-    const messaging = createMessaging();
+    const reply = createReply();
 
     await respondToExpense({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
-      messaging,
+      reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
@@ -248,14 +240,13 @@ describe("支出が入力された場合", () => {
       }),
     });
 
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledOnce();
-    expect(messaging.replyWithQuickReply).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining(
-          "先に確認中の支出を「はい」か「いいえ」で回答してください。",
-        ),
-      }),
+    expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
+    expect(reply.sendWithQuickItems).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "先に確認中の支出を「はい」か「いいえ」で回答してください。",
+      ),
+      expect.any(Array),
     );
-    expect(messaging.replyText).not.toHaveBeenCalled();
+    expect(reply.send).not.toHaveBeenCalled();
   });
 });
