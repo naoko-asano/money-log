@@ -2,7 +2,7 @@ import type { webhook } from "@line/bot-sdk";
 import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
-import { mediaReader, messaging } from "./_infrastructure/messaging/index.js";
+import { createReply, mediaReader } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
@@ -32,6 +32,11 @@ export async function POST(req: Request): Promise<Response> {
     const userId = event.source?.userId;
     if (!userId) continue;
 
+    const replyToken = (event as { replyToken?: string }).replyToken;
+    if (!replyToken) continue;
+
+    const reply = createReply(replyToken);
+
     try {
       if (isConfirmationEvent(event)) {
         const confirmation = parseConfirmation(
@@ -43,10 +48,9 @@ export async function POST(req: Request): Promise<Response> {
         if (!confirmation) continue;
         await respondToConfirmation({
           userId,
-          replyToken: event.replyToken,
           isApproved: confirmation.action === "ok",
           pendingWebhookEventId: confirmation.pendingWebhookEventId,
-          messaging,
+          reply,
           expensesRepo,
           pendingExpensesRepo,
         });
@@ -54,10 +58,9 @@ export async function POST(req: Request): Promise<Response> {
         const text = event.message.text;
         await respondToExpense({
           userId,
-          replyToken: event.replyToken,
           webhookEventId: event.webhookEventId,
           parseInput: () => expenseParser.fromText(text),
-          messaging,
+          reply,
           expensesRepo,
           pendingExpensesRepo,
         });
@@ -65,13 +68,12 @@ export async function POST(req: Request): Promise<Response> {
         const messageId = event.message.id;
         await respondToExpense({
           userId,
-          replyToken: event.replyToken,
           webhookEventId: event.webhookEventId,
           parseInput: async () => {
             const { data, mimeType } = await mediaReader.read(messageId);
             return expenseParser.fromImage({ imageBase64: data, mimeType });
           },
-          messaging,
+          reply,
           expensesRepo,
           pendingExpensesRepo,
         });

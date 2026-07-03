@@ -1,30 +1,26 @@
 import type { Readable } from "node:stream";
 import { messagingApi } from "@line/bot-sdk";
 import type { MediaReader } from "../../_usecases/_ports/media-reader.js";
-import type { Messaging } from "../../_usecases/_ports/messaging.js";
+import type { Reply } from "../../_usecases/_ports/reply.js";
 
-export const replyText: Messaging["replyText"] = async ({
-  replyToken,
-  text,
-}) => {
-  const client = createClient();
-  await client.replyMessage({
-    replyToken,
-    messages: [{ type: "text", text }],
-  });
-};
-
-export const replyWithQuickReply: Messaging["replyWithQuickReply"] = async ({
-  replyToken,
-  text,
-  items,
-}) => {
-  const client = createClient();
-  await client.replyMessage({
-    replyToken,
-    messages: [{ type: "text", text, quickReply: { items } }],
-  });
-};
+export function createLineReply(replyToken: string): Reply {
+  return {
+    async send(text) {
+      const client = createClient();
+      await client.replyMessage({
+        replyToken,
+        messages: [{ type: "text", text }],
+      });
+    },
+    async sendWithQuickItems(text, items) {
+      const client = createClient();
+      await client.replyMessage({
+        replyToken,
+        messages: [{ type: "text", text, quickReply: { items } }],
+      });
+    },
+  };
+}
 
 export const getImageContent: MediaReader["read"] = async (messageId) => {
   const client = createBlobClient();

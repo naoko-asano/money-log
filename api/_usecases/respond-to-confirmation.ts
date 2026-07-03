@@ -1,25 +1,23 @@
 import type { PendingExpense } from "../../shared/model/pending-expense.js";
 import { DEFAULT_USER_ERROR_TEXT, handleError } from "../_lib/handle-error.js";
 import type { ExpensesRepo } from "./_ports/expenses-repo.js";
-import type { Messaging } from "./_ports/messaging.js";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo.js";
+import type { Reply } from "./_ports/reply.js";
 
 type Args = {
   userId: string;
-  replyToken: string;
   isApproved: boolean;
   pendingWebhookEventId: string;
-  messaging: Messaging;
+  reply: Reply;
   expensesRepo: ExpensesRepo;
   pendingExpensesRepo: PendingExpensesRepo;
 };
 
 export async function respondToConfirmation({
   userId,
-  replyToken,
   isApproved,
   pendingWebhookEventId,
-  messaging,
+  reply,
   expensesRepo,
   pendingExpensesRepo,
 }: Args): Promise<void> {
@@ -30,20 +28,13 @@ export async function respondToConfirmation({
     await handleError({
       error,
       label: "pendingExpensesRepo.get",
-      notify: () =>
-        messaging.replyText({
-          replyToken,
-          text: DEFAULT_USER_ERROR_TEXT,
-        }),
+      notify: () => reply.send(DEFAULT_USER_ERROR_TEXT),
     });
     return;
   }
 
   if (!pendingExpense) {
-    await messaging.replyText({
-      replyToken,
-      text: "確認待ちの支出はありません。",
-    });
+    await reply.send("確認待ちの支出はありません。");
     return;
   }
 
@@ -58,14 +49,11 @@ export async function respondToConfirmation({
         error,
         label: "expensesRepo.createFromPending",
         notify: () =>
-          messaging.replyText({
-            replyToken,
-            text: "登録に失敗しました。もう一度お試しください。",
-          }),
+          reply.send("登録に失敗しました。もう一度お試しください。"),
       });
       return;
     }
-    await messaging.replyText({ replyToken, text: "登録しました！" });
+    await reply.send("登録しました！");
     return;
   }
 
@@ -75,13 +63,9 @@ export async function respondToConfirmation({
     await handleError({
       error,
       label: "pendingExpensesRepo.delete",
-      notify: () =>
-        messaging.replyText({
-          replyToken,
-          text: DEFAULT_USER_ERROR_TEXT,
-        }),
+      notify: () => reply.send(DEFAULT_USER_ERROR_TEXT),
     });
     return;
   }
-  await messaging.replyText({ replyToken, text: "キャンセルしました。" });
+  await reply.send("キャンセルしました。");
 }
