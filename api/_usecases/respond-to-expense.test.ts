@@ -228,6 +228,10 @@ describe("支出が入力された場合", () => {
 
   it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
+    const getPendingExpense = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new Error("db error"));
 
     await respondToExpense({
       ...BASE_ARGS,
@@ -236,13 +240,11 @@ describe("支出が入力された場合", () => {
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
-        get: vi
-          .fn()
-          .mockResolvedValueOnce(null)
-          .mockRejectedValueOnce(new Error("db error")),
+        get: getPendingExpense,
       }),
     });
 
+    expect(getPendingExpense).toHaveBeenCalledTimes(2);
     expect(reply.send).toHaveBeenCalledOnce();
     expect(reply.send).toHaveBeenCalledWith(
       "エラーが発生しました。しばらく経ってからお試しください。",
@@ -252,6 +254,10 @@ describe("支出が入力された場合", () => {
 
   it("確認待ち支出の作成が競合し、取得でも見つからない場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
+    const getPendingExpense = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
 
     await respondToExpense({
       ...BASE_ARGS,
@@ -260,10 +266,11 @@ describe("支出が入力された場合", () => {
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
-        get: vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(null),
+        get: getPendingExpense,
       }),
     });
 
+    expect(getPendingExpense).toHaveBeenCalledTimes(2);
     expect(reply.send).toHaveBeenCalledOnce();
     expect(reply.send).toHaveBeenCalledWith(
       "エラーが発生しました。しばらく経ってからお試しください。",
