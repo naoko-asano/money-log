@@ -91,34 +91,20 @@ export async function POST(req: Request): Promise<Response> {
 
 function isConfirmationEvent(
   event: webhook.Event,
-): event is webhook.PostbackEvent & { replyToken: string } {
-  return event.type === "postback" && !!event.replyToken;
+): event is webhook.PostbackEvent {
+  return event.type === "postback";
 }
 
 function isTextInputEvent(
   event: webhook.Event,
-): event is webhook.MessageEvent & {
-  message: webhook.TextMessageContent;
-  replyToken: string;
-} {
-  return (
-    event.type === "message" &&
-    event.message.type === "text" &&
-    !!event.replyToken
-  );
+): event is webhook.MessageEvent & { message: webhook.TextMessageContent } {
+  return event.type === "message" && event.message.type === "text";
 }
 
 function isImageInputEvent(
   event: webhook.Event,
-): event is webhook.MessageEvent & {
-  message: webhook.ImageMessageContent;
-  replyToken: string;
-} {
-  return (
-    event.type === "message" &&
-    event.message.type === "image" &&
-    !!event.replyToken
-  );
+): event is webhook.MessageEvent & { message: webhook.ImageMessageContent } {
+  return event.type === "message" && event.message.type === "image";
 }
 
 function parseConfirmation(
