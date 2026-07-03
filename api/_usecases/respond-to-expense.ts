@@ -107,7 +107,10 @@ export async function respondToExpense({
       hasPendingExpense: true,
       reply,
     });
+    return;
   }
+
+  await reply.send(DEFAULT_USER_ERROR_TEXT);
 }
 
 function buildConfirmationItems(pendingWebhookEventId: string) {
