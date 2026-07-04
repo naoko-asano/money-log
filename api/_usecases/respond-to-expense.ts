@@ -96,7 +96,7 @@ export async function respondToExpense({
   } catch (error) {
     await handleError({
       error,
-      label: "pendingExpensesRepo.get",
+      label: "pendingExpensesRepo.get (conflict recovery)",
       notify: () => reply.send(DEFAULT_USER_ERROR_TEXT),
     });
     return;
@@ -107,7 +107,10 @@ export async function respondToExpense({
       hasPendingExpense: true,
       reply,
     });
+    return;
   }
+
+  await reply.send(DEFAULT_USER_ERROR_TEXT);
 }
 
 function buildConfirmationItems(pendingWebhookEventId: string) {
