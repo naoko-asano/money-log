@@ -1,8 +1,11 @@
-import type { webhook } from "@line/bot-sdk";
 import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
-import { createReply, mediaReader } from "./_infrastructure/messaging/index.js";
+import {
+  createReply,
+  mediaReader,
+  parseWebhookEvents,
+} from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
 import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
@@ -26,51 +29,43 @@ export async function POST(req: Request): Promise<Response> {
     return new Response("Invalid signature", { status: 401 });
   }
 
-  const body = JSON.parse(rawBody) as { events: webhook.Event[] };
+  const events = parseWebhookEvents(rawBody);
 
-  for (const event of body.events ?? []) {
-    const userId = event.source?.userId;
-    if (!userId) continue;
-
-    const replyToken = (event as { replyToken?: string }).replyToken;
-    if (!replyToken) continue;
-
-    const reply = createReply(replyToken);
+  for (const event of events) {
+    const reply = createReply(event.replyToken);
 
     try {
-      if (isConfirmationEvent(event)) {
-        const confirmation = parseConfirmation(
-          event.postback.data,
-          userId,
+      if (event.type === "confirmation") {
+        const confirmation = parseConfirmationPayload(
+          event.confirmationPayload,
+          event.userId,
           event.webhookEventId,
         );
 
         if (!confirmation) continue;
         await respondToConfirmation({
-          userId,
+          userId: event.userId,
           isApproved: confirmation.action === "ok",
           pendingWebhookEventId: confirmation.pendingWebhookEventId,
           reply,
           expensesRepo,
           pendingExpensesRepo,
         });
-      } else if (isTextInputEvent(event)) {
-        const text = event.message.text;
+      } else if (event.type === "text") {
         await respondToExpense({
-          userId,
+          userId: event.userId,
           webhookEventId: event.webhookEventId,
-          parseInput: () => expenseParser.fromText(text),
+          parseInput: () => expenseParser.fromText(event.text),
           reply,
           expensesRepo,
           pendingExpensesRepo,
         });
-      } else if (isImageInputEvent(event)) {
-        const messageId = event.message.id;
+      } else if (event.type === "image") {
         await respondToExpense({
-          userId,
+          userId: event.userId,
           webhookEventId: event.webhookEventId,
           parseInput: async () => {
-            const { data, mimeType } = await mediaReader.read(messageId);
+            const { data, mimeType } = await mediaReader.read(event.messageId);
             return expenseParser.fromImage({ imageBase64: data, mimeType });
           },
           reply,
@@ -80,7 +75,7 @@ export async function POST(req: Request): Promise<Response> {
       }
     } catch (error) {
       console.error(
-        `webhook event processing failed (userId: ${userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
+        `webhook event processing failed (userId: ${event.userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
         error,
       );
     }
@@ -89,25 +84,7 @@ export async function POST(req: Request): Promise<Response> {
   return new Response(null, { status: 200 });
 }
 
-function isConfirmationEvent(
-  event: webhook.Event,
-): event is webhook.PostbackEvent {
-  return event.type === "postback";
-}
-
-function isTextInputEvent(
-  event: webhook.Event,
-): event is webhook.MessageEvent & { message: webhook.TextMessageContent } {
-  return event.type === "message" && event.message.type === "text";
-}
-
-function isImageInputEvent(
-  event: webhook.Event,
-): event is webhook.MessageEvent & { message: webhook.ImageMessageContent } {
-  return event.type === "message" && event.message.type === "image";
-}
-
-function parseConfirmation(
+function parseConfirmationPayload(
   rawJson: string,
   userId: string,
   webhookEventId: string,
@@ -117,7 +94,7 @@ function parseConfirmation(
     parsed = JSON.parse(rawJson);
   } catch {
     console.error(
-      `webhook invalid postback.data (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      `webhook invalid confirmationPayload (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
       rawJson,
     );
     return null;
@@ -128,7 +105,7 @@ function parseConfirmation(
       .pendingWebhookEventId !== "string"
   ) {
     console.error(
-      `webhook unexpected postback.data shape (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      `webhook unexpected confirmationPayload shape (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
       rawJson,
     );
     return null;
