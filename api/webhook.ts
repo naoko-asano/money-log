@@ -65,8 +65,10 @@ export async function POST(req: Request): Promise<Response> {
           userId: event.userId,
           webhookEventId: event.webhookEventId,
           parseInput: async () => {
-            const { data, mimeType } = await mediaReader.read(event.messageId);
-            return expenseParser.fromImage({ imageBase64: data, mimeType });
+            const { mimeType, imageBase64 } = await mediaReader.read(
+              event.messageId,
+            );
+            return expenseParser.fromImage({ mimeType, imageBase64 });
           },
           reply,
           expensesRepo,

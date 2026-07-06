@@ -56,8 +56,8 @@ describe("画像から支出を解析する", () => {
     const result = await createExpenseParser(
       createAi({ returnValue: VALID_EXPENSE_JSON }),
     ).fromImage({
-      imageBase64: "base64data",
       mimeType: "image/jpeg",
+      imageBase64: "base64data",
     });
     expect(result).toEqual({
       date: new Date("2026-01-15"),
