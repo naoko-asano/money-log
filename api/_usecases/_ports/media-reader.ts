@@ -1,3 +1,3 @@
 export type MediaReader = {
-  read(messageId: string): Promise<{ imageBase64: string; mimeType: string }>;
+  read(messageId: string): Promise<{ mimeType: string; imageBase64: string }>;
 };

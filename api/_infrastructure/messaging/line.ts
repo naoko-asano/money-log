@@ -67,7 +67,7 @@ export const getImageContent: MediaReader["read"] = async (messageId) => {
     await client.getMessageContentWithHttpInfo(messageId);
   const mimeType = httpResponse.headers.get("content-type") ?? "image/jpeg";
   const imageBase64 = await streamToBase64(body);
-  return { imageBase64, mimeType };
+  return { mimeType, imageBase64 };
 };
 
 function getToken(): string {

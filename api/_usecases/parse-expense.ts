@@ -40,8 +40,8 @@ async function parseTextToExpense({
 
 async function parseImageToExpense({
   ai,
-  imageBase64,
   mimeType,
+  imageBase64,
 }: { ai: Ai } & ImageItem): Promise<Expense> {
   const result = await ai.generateText({
     contents: [
