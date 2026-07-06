@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseWebhookEvents } from "./line";
+import { parseWebhookEvents } from "./webhook-events";
 
 const USER_ID = "user-001";
 const REPLY_TOKEN = "reply-token-001";
