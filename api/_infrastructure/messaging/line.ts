@@ -24,32 +24,18 @@ export function parseWebhookEvents(rawBody: string): WebhookEvent[] {
     const replyToken = (event as { replyToken?: string }).replyToken;
     if (!replyToken) continue;
 
-    const webhookEventId = event.webhookEventId;
+    const base = { webhookEventId: event.webhookEventId, userId, replyToken };
 
     if (event.type === "postback") {
       events.push({
-        webhookEventId,
-        userId,
-        replyToken,
+        ...base,
         type: "confirmation",
         confirmationPayload: event.postback.data,
       });
     } else if (event.type === "message" && event.message.type === "text") {
-      events.push({
-        webhookEventId,
-        userId,
-        replyToken,
-        type: "text",
-        text: event.message.text,
-      });
+      events.push({ ...base, type: "text", text: event.message.text });
     } else if (event.type === "message" && event.message.type === "image") {
-      events.push({
-        webhookEventId,
-        userId,
-        replyToken,
-        type: "image",
-        messageId: event.message.id,
-      });
+      events.push({ ...base, type: "image", messageId: event.message.id });
     }
   }
 
