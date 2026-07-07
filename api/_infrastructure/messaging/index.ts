@@ -1,4 +1,4 @@
-import type { MediaReader } from "../../_usecases/_ports/media-reader.js";
+import type { MediaReader } from "#api/_usecases/_ports/media-reader.js";
 import { getImageContent } from "./line/media-reader.js";
 import { createLineReply } from "./line/reply.js";
 import { parseWebhookEvents } from "./line/webhook-events.js";

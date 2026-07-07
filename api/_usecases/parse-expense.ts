@@ -1,9 +1,5 @@
-import {
-  CATEGORIES,
-  type Expense,
-  isCategory,
-} from "../../shared/model/expense.js";
-import { getToday } from "../../shared/utils/date.js";
+import { CATEGORIES, type Expense, isCategory } from "#shared/model/expense.js";
+import { getToday } from "#shared/utils/date.js";
 import type { Ai, ImageItem } from "./_ports/ai.js";
 
 const EXPENSE_SCHEMA = {

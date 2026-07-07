@@ -1,5 +1,5 @@
-import type { Category, Expense } from "../model/expense.js";
-import type { PendingExpense } from "../model/pending-expense.js";
+import type { Category, Expense } from "#shared/model/expense.js";
+import type { PendingExpense } from "#shared/model/pending-expense.js";
 import { sql } from "./client.js";
 
 export type { PendingExpense };

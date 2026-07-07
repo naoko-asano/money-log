@@ -1,4 +1,4 @@
-import { sql } from "../shared/db/client";
+import { sql } from "#shared/db/client.js";
 
 (async () => {
   await sql`
