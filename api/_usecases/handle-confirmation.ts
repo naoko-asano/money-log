@@ -16,7 +16,7 @@ type Args = {
   pendingExpensesRepo: PendingExpensesRepo;
 };
 
-export async function respondToConfirmation({
+export async function handleConfirmation({
   userId,
   isApproved,
   pendingWebhookEventId,

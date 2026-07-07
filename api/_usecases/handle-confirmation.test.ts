@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import type { Reply } from "./_ports/reply";
-import { respondToConfirmation } from "./respond-to-confirmation";
+import { handleConfirmation } from "./handle-confirmation";
 
 const PENDING_EXPENSE = {
   date: new Date("2026-01-15"),
@@ -50,7 +50,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       reply,
@@ -68,7 +68,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: false,
       reply,
@@ -86,7 +86,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       reply,
@@ -105,7 +105,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       reply,
@@ -125,7 +125,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("承認時にDBへの書き込みに失敗した場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       reply,
@@ -144,7 +144,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("キャンセル時にDBの削除に失敗した場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       isApproved: false,
       reply,
@@ -165,7 +165,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
-    await respondToConfirmation({
+    await handleConfirmation({
       ...BASE_ARGS,
       pendingWebhookEventId: "different-event",
       isApproved: true,
