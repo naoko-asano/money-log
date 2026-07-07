@@ -24,4 +24,17 @@ describe("verifySignature", () => {
     const invalidSignature = makeSignature(BODY, "invalid-secret");
     expect(verifySignature(BODY, invalidSignature, SECRET)).toBe(false);
   });
+
+  it("署名がnullやundefinedの場合は例外を投げずに拒否する", () => {
+    expect(verifySignature(BODY, null as unknown as string, SECRET)).toBe(
+      false,
+    );
+    expect(verifySignature(BODY, undefined as unknown as string, SECRET)).toBe(
+      false,
+    );
+  });
+
+  it("長さの異なる署名を拒否する", () => {
+    expect(verifySignature(BODY, "short", SECRET)).toBe(false);
+  });
 });
