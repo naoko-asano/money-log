@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import type { Reply } from "./_ports/reply";
-import { respondToExpense } from "./respond-to-expense";
+import { handleExpenseInput } from "./handle-expense-input";
 
 const EXPENSE = {
   date: new Date("2026-01-15"),
@@ -53,7 +53,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
@@ -76,7 +76,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const parseInput = vi.fn();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput,
       reply,
@@ -101,7 +101,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const parseInput = vi.fn();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput,
       reply,
@@ -120,7 +120,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockRejectedValue(new Error("parse error")),
       reply,
@@ -139,7 +139,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const parseInput = vi.fn();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput,
       reply,
@@ -161,7 +161,7 @@ describe("支出が入力された場合", () => {
     const reply = createReply();
     const parseInput = vi.fn();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput,
       reply,
@@ -182,7 +182,7 @@ describe("支出が入力された場合", () => {
   it("確認待ち支出の作成に失敗した場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
@@ -202,7 +202,7 @@ describe("支出が入力された場合", () => {
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
     const reply = createReply();
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
@@ -233,7 +233,7 @@ describe("支出が入力された場合", () => {
       .mockResolvedValueOnce(null)
       .mockRejectedValueOnce(new Error("db error"));
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
@@ -259,7 +259,7 @@ describe("支出が入力された場合", () => {
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
 
-    await respondToExpense({
+    await handleExpenseInput({
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,

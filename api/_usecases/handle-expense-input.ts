@@ -18,7 +18,7 @@ type Args = {
   pendingExpensesRepo: PendingExpensesRepo;
 };
 
-export async function respondToExpense({
+export async function handleExpenseInput({
   userId,
   webhookEventId,
   parseInput,

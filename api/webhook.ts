@@ -7,9 +7,9 @@ import {
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import { handleConfirmation } from "./_usecases/handle-confirmation.js";
+import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
-import { respondToConfirmation } from "./_usecases/respond-to-confirmation.js";
-import { respondToExpense } from "./_usecases/respond-to-expense.js";
 
 const expenseParser = createExpenseParser(ai);
 
@@ -43,7 +43,7 @@ export async function POST(req: Request): Promise<Response> {
         );
 
         if (!confirmation) continue;
-        await respondToConfirmation({
+        await handleConfirmation({
           userId: event.userId,
           isApproved: confirmation.action === "ok",
           pendingWebhookEventId: confirmation.pendingWebhookEventId,
@@ -52,7 +52,7 @@ export async function POST(req: Request): Promise<Response> {
           pendingExpensesRepo,
         });
       } else if (event.type === "text") {
-        await respondToExpense({
+        await handleExpenseInput({
           userId: event.userId,
           webhookEventId: event.webhookEventId,
           parseInput: () => expenseParser.fromText(event.text),
@@ -61,7 +61,7 @@ export async function POST(req: Request): Promise<Response> {
           pendingExpensesRepo,
         });
       } else if (event.type === "image") {
-        await respondToExpense({
+        await handleExpenseInput({
           userId: event.userId,
           webhookEventId: event.webhookEventId,
           parseInput: async () => {
