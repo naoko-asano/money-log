@@ -71,7 +71,6 @@ export async function handleExpenseInput({
     });
     return;
   }
-  console.log("parsed expense:", expense);
 
   let created: PendingExpense | null;
   try {
