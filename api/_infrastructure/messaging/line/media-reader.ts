@@ -1,6 +1,6 @@
 import type { Readable } from "node:stream";
 import { messagingApi } from "@line/bot-sdk";
-import type { MediaReader } from "../../../_usecases/_ports/media-reader.js";
+import type { MediaReader } from "#api/_usecases/_ports/media-reader.js";
 import { getToken } from "./token.js";
 
 export const getImageContent: MediaReader["read"] = async (messageId) => {

@@ -1,4 +1,4 @@
-import type { PendingExpense } from "../../../shared/model/pending-expense.js";
+import type { PendingExpense } from "#shared/model/pending-expense.js";
 
 export type ExpensesRepo = {
   exists(webhookEventId: string): Promise<boolean>;

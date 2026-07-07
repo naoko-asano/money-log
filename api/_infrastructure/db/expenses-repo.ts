@@ -1,8 +1,8 @@
+import type { ExpensesRepo } from "#api/_usecases/_ports/expenses-repo.js";
 import {
   createExpenseFromPending,
   existsExpenseByWebhookEventId,
-} from "../../../shared/db/expenses.js";
-import type { ExpensesRepo } from "../../_usecases/_ports/expenses-repo.js";
+} from "#shared/db/expenses.js";
 
 export const expensesRepo: ExpensesRepo = {
   exists: existsExpenseByWebhookEventId,

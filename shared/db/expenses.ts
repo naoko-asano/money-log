@@ -1,4 +1,4 @@
-import type { PendingExpense } from "../model/pending-expense.js";
+import type { PendingExpense } from "#shared/model/pending-expense.js";
 import { sql } from "./client.js";
 
 export async function existsExpenseByWebhookEventId(

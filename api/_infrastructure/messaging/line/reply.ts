@@ -1,5 +1,5 @@
 import { messagingApi } from "@line/bot-sdk";
-import type { Reply } from "../../../_usecases/_ports/reply.js";
+import type { Reply } from "#api/_usecases/_ports/reply.js";
 import { getToken } from "./token.js";
 
 export function createLineReply(replyToken: string): Reply {

@@ -3,7 +3,7 @@ import type {
   GenerateTextArgs,
   ImageItem,
   InputItem,
-} from "../../_usecases/_ports/ai.js";
+} from "#api/_usecases/_ports/ai.js";
 
 const MODEL = "gemini-3.1-flash-lite";
 
