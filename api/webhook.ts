@@ -6,6 +6,7 @@ import {
   mediaReader,
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
+import { createReplyWithLog } from "./_lib/reply-with-log.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
 import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
@@ -32,7 +33,8 @@ export async function POST(req: Request): Promise<Response> {
   const events = parseWebhookEvents(rawBody);
 
   for (const event of events) {
-    const reply = createReply(event.replyToken);
+    console.log("webhook input:", event);
+    const reply = createReplyWithLog(createReply(event.replyToken), event);
 
     try {
       if (event.type === "confirmation") {
