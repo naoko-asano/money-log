@@ -35,7 +35,11 @@ export async function POST(req: Request): Promise<Response> {
 
   for (const event of events) {
     console.log("webhook input:", event);
-    const reply = createReplyWithLog(createReply(event.replyToken), event);
+    const reply = createReplyWithLog(createReply(event.replyToken), {
+      userId: event.userId,
+      webhookEventId: event.webhookEventId,
+      type: event.type,
+    });
     const errorHandler = createErrorHandler({
       userId: event.userId,
       webhookEventId: event.webhookEventId,

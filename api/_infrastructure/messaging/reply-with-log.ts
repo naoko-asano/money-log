@@ -2,7 +2,7 @@ import type { Reply } from "#api/_usecases/_ports/reply.js";
 
 export function createReplyWithLog(
   reply: Reply,
-  context: { userId: string; webhookEventId: string; type: string },
+  context: Record<string, unknown>,
 ): Reply {
   return {
     async send(text) {
