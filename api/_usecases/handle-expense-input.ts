@@ -1,4 +1,4 @@
-import { DEFAULT_USER_ERROR_TEXT } from "#api/_lib/error-handler.js";
+import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
 import type { Expense } from "#shared/model/expense.js";
 import type { PendingExpense } from "#shared/model/pending-expense.js";
 import { formatDate } from "#shared/utils/date.js";

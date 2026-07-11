@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
 import type { Reply } from "#api/_usecases/_ports/reply.js";
-import { createErrorHandler, DEFAULT_USER_ERROR_TEXT } from "./error-handler";
+import { createErrorHandler } from "./error-handler";
 
 const CONTEXT = {
   userId: "user-001",

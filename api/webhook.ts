@@ -1,13 +1,13 @@
 import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
+import { createErrorHandler } from "./_infrastructure/error-handler.js";
 import {
   createReply,
+  createReplyWithLog,
   mediaReader,
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
-import { createErrorHandler } from "./_lib/error-handler.js";
-import { createReplyWithLog } from "./_lib/reply-with-log.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
 import { handleExpenseInput } from "./_usecases/handle-expense-input.js";

@@ -1,7 +1,5 @@
+import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
 import type { ErrorHandler } from "#api/_usecases/_ports/error-handler.js";
-
-export const DEFAULT_USER_ERROR_TEXT =
-  "エラーが発生しました。しばらく経ってからお試しください。";
 
 export function createErrorHandler(context: {
   userId: string;
