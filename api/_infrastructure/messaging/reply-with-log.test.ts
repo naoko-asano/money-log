@@ -15,8 +15,8 @@ function createReply(): Reply {
   };
 }
 
-describe("createReplyWithLog", () => {
-  it("sendを呼ぶとログを出力してから元のreplyのsendを呼ぶ", async () => {
+describe("ログ付きのreplyを実行した場合", () => {
+  it("sendでログを出力してから元のreplyのsendを呼ぶ", async () => {
     const reply = createReply();
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -32,7 +32,7 @@ describe("createReplyWithLog", () => {
     expect(reply.send).toHaveBeenCalledWith("こんにちは");
   });
 
-  it("sendWithQuickItemsを呼ぶとログを出力してから元のreplyのsendWithQuickItemsを呼ぶ", async () => {
+  it("sendWithQuickItemsでログを出力してから元のreplyのsendWithQuickItemsを呼ぶ", async () => {
     const reply = createReply();
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const items = [
