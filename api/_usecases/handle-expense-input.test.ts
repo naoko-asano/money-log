@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ErrorHandler } from "./_ports/error-handler";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import type { Reply } from "./_ports/reply";
@@ -48,10 +49,17 @@ function createPendingExpensesRepo(
   };
 }
 
+function createErrorHandler(): ErrorHandler {
+  return {
+    run: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe("支出が入力された場合", () => {
   it("支出の解析に成功した場合、確認待ち支出を作成して確認メッセージを送信する", async () => {
     const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
+    const errorHandler = createErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -59,6 +67,7 @@ describe("支出が入力された場合", () => {
       reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo,
+      errorHandler,
     });
 
     expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
@@ -75,6 +84,7 @@ describe("支出が入力された場合", () => {
   it("確認待ちの支出がある場合、確認メッセージを送信する", async () => {
     const reply = createReply();
     const parseInput = vi.fn();
+    const errorHandler = createErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -84,6 +94,7 @@ describe("支出が入力された場合", () => {
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
       }),
+      errorHandler,
     });
 
     expect(parseInput).not.toHaveBeenCalled();
@@ -100,6 +111,7 @@ describe("支出が入力された場合", () => {
   it("同じ webhookEventId の支出が既に存在する場合、何も送信しない", async () => {
     const reply = createReply();
     const parseInput = vi.fn();
+    const errorHandler = createErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -109,6 +121,7 @@ describe("支出が入力された場合", () => {
         exists: vi.fn().mockResolvedValue(true),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
+      errorHandler,
     });
 
     expect(parseInput).not.toHaveBeenCalled();
@@ -116,28 +129,36 @@ describe("支出が入力された場合", () => {
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
-  it("入力の解析に失敗した場合、エラーメッセージを送信する", async () => {
+  it("入力の解析に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
+    const errorHandler = createErrorHandler();
+    const error = new Error("parse error");
 
     await handleExpenseInput({
       ...BASE_ARGS,
-      parseInput: vi.fn().mockRejectedValue(new Error("parse error")),
+      parseInput: vi.fn().mockRejectedValue(error),
       reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo,
+      errorHandler,
     });
 
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "解析できませんでした。もう一度お試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "parseInput",
+      reply,
+      userText: "解析できませんでした。もう一度お試しください。",
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
-  it("確認待ち支出の取得に失敗した場合、エラーメッセージを送信する", async () => {
+  it("確認待ち支出の取得に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
     const parseInput = vi.fn();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -145,42 +166,52 @@ describe("支出が入力された場合", () => {
       reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
-        get: vi.fn().mockRejectedValue(new Error("db error")),
+        get: vi.fn().mockRejectedValue(error),
       }),
+      errorHandler,
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "pendingExpensesRepo.get",
+      reply,
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
-  it("支出の存在確認に失敗した場合、エラーメッセージを送信する", async () => {
+  it("支出の存在確認に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
     const parseInput = vi.fn();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleExpenseInput({
       ...BASE_ARGS,
       parseInput,
       reply,
       expensesRepo: createExpensesRepo({
-        exists: vi.fn().mockRejectedValue(new Error("db error")),
+        exists: vi.fn().mockRejectedValue(error),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
+      errorHandler,
     });
 
     expect(parseInput).not.toHaveBeenCalled();
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "expensesRepo.exists",
+      reply,
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
-  it("確認待ち支出の作成に失敗した場合、エラーメッセージを送信する", async () => {
+  it("確認待ち支出の作成に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -188,19 +219,23 @@ describe("支出が入力された場合", () => {
       reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
-        create: vi.fn().mockRejectedValue(new Error("db error")),
+        create: vi.fn().mockRejectedValue(error),
       }),
+      errorHandler,
     });
 
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "pendingExpensesRepo.create",
+      reply,
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -214,6 +249,7 @@ describe("支出が入力された場合", () => {
           .mockResolvedValueOnce(null)
           .mockResolvedValueOnce(PENDING_EXPENSE),
       }),
+      errorHandler,
     });
 
     expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
@@ -226,12 +262,14 @@ describe("支出が入力された場合", () => {
     expect(reply.send).not.toHaveBeenCalled();
   });
 
-  it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーメッセージを送信する", async () => {
+  it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
     const getPendingExpense = vi
       .fn()
       .mockResolvedValueOnce(null)
-      .mockRejectedValueOnce(new Error("db error"));
+      .mockRejectedValueOnce(error);
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -242,18 +280,22 @@ describe("支出が入力された場合", () => {
         create: vi.fn().mockResolvedValue(null),
         get: getPendingExpense,
       }),
+      errorHandler,
     });
 
     expect(getPendingExpense).toHaveBeenCalledTimes(2);
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "pendingExpensesRepo.get (conflict recovery)",
+      reply,
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
   it("確認待ち支出の作成が競合し、取得でも見つからない場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
     const getPendingExpense = vi
       .fn()
       .mockResolvedValueOnce(null)
@@ -268,6 +310,7 @@ describe("支出が入力された場合", () => {
         create: vi.fn().mockResolvedValue(null),
         get: getPendingExpense,
       }),
+      errorHandler,
     });
 
     expect(getPendingExpense).toHaveBeenCalledTimes(2);

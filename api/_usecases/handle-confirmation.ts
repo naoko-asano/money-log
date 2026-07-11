@@ -1,8 +1,5 @@
-import {
-  DEFAULT_USER_ERROR_TEXT,
-  handleError,
-} from "#api/_lib/handle-error.js";
 import type { PendingExpense } from "#shared/model/pending-expense.js";
+import type { ErrorHandler } from "./_ports/error-handler.js";
 import type { ExpensesRepo } from "./_ports/expenses-repo.js";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo.js";
 import type { Reply } from "./_ports/reply.js";
@@ -14,6 +11,7 @@ type Args = {
   reply: Reply;
   expensesRepo: ExpensesRepo;
   pendingExpensesRepo: PendingExpensesRepo;
+  errorHandler: ErrorHandler;
 };
 
 export async function handleConfirmation({
@@ -23,15 +21,16 @@ export async function handleConfirmation({
   reply,
   expensesRepo,
   pendingExpensesRepo,
+  errorHandler,
 }: Args): Promise<void> {
   let pendingExpense: PendingExpense | null;
   try {
     pendingExpense = await pendingExpensesRepo.get(userId);
   } catch (error) {
-    await handleError({
+    await errorHandler.run({
       error,
       label: "pendingExpensesRepo.get",
-      notify: () => reply.send(DEFAULT_USER_ERROR_TEXT),
+      reply,
     });
     return;
   }
@@ -48,11 +47,11 @@ export async function handleConfirmation({
     try {
       await expensesRepo.createFromPending(userId, pendingExpense);
     } catch (error) {
-      await handleError({
+      await errorHandler.run({
         error,
         label: "expensesRepo.createFromPending",
-        notify: () =>
-          reply.send("登録に失敗しました。もう一度お試しください。"),
+        reply,
+        userText: "登録に失敗しました。もう一度お試しください。",
       });
       return;
     }
@@ -63,10 +62,10 @@ export async function handleConfirmation({
   try {
     await pendingExpensesRepo.delete(userId, pendingExpense.webhookEventId);
   } catch (error) {
-    await handleError({
+    await errorHandler.run({
       error,
       label: "pendingExpensesRepo.delete",
-      notify: () => reply.send(DEFAULT_USER_ERROR_TEXT),
+      reply,
     });
     return;
   }

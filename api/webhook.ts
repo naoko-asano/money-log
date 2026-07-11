@@ -6,6 +6,7 @@ import {
   mediaReader,
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
+import { createErrorHandler } from "./_lib/error-handler.js";
 import { createReplyWithLog } from "./_lib/reply-with-log.js";
 import { verifySignature } from "./_lib/verify-signature.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
@@ -35,6 +36,11 @@ export async function POST(req: Request): Promise<Response> {
   for (const event of events) {
     console.log("webhook input:", event);
     const reply = createReplyWithLog(createReply(event.replyToken), event);
+    const errorHandler = createErrorHandler({
+      userId: event.userId,
+      webhookEventId: event.webhookEventId,
+      type: event.type,
+    });
 
     try {
       if (event.type === "confirmation") {
@@ -52,6 +58,7 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       } else if (event.type === "text") {
         await handleExpenseInput({
@@ -61,6 +68,7 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       } else if (event.type === "image") {
         await handleExpenseInput({
@@ -75,6 +83,7 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       }
     } catch (error) {

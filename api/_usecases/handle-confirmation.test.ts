@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ErrorHandler } from "./_ports/error-handler";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import type { Reply } from "./_ports/reply";
@@ -44,11 +45,18 @@ function createPendingExpensesRepo(
   };
 }
 
+function createErrorHandler(): ErrorHandler {
+  return {
+    run: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe("支出登録の確認ボタンが押下された場合", () => {
   it("承認された場合、支出を登録してメッセージを送信する", async () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
+    const errorHandler = createErrorHandler();
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -56,6 +64,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       reply,
       expensesRepo,
       pendingExpensesRepo,
+      errorHandler,
     });
 
     expect(expensesRepo.createFromPending).toHaveBeenCalledOnce();
@@ -67,6 +76,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
+    const errorHandler = createErrorHandler();
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -74,6 +84,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       reply,
       expensesRepo,
       pendingExpensesRepo,
+      errorHandler,
     });
 
     expect(pendingExpensesRepo.delete).toHaveBeenCalledOnce();
@@ -85,6 +96,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("確認待ちの支出がない場合、エラーメッセージを送信する", async () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
+    const errorHandler = createErrorHandler();
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -94,6 +106,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockResolvedValue(null),
       }),
+      errorHandler,
     });
 
     expect(reply.send).toHaveBeenCalledOnce();
@@ -101,9 +114,11 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
   });
 
-  it("確認待ち支出の取得に失敗した場合、エラーメッセージを送信する", async () => {
+  it("確認待ち支出の取得に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -111,38 +126,49 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       reply,
       expensesRepo,
       pendingExpensesRepo: createPendingExpensesRepo({
-        get: vi.fn().mockRejectedValue(new Error("db error")),
+        get: vi.fn().mockRejectedValue(error),
       }),
+      errorHandler,
     });
 
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "pendingExpensesRepo.get",
+      reply,
+    });
     expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
   });
 
-  it("承認時にDBへの書き込みに失敗した場合、エラーメッセージを送信する", async () => {
+  it("承認時にDBへの書き込みに失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleConfirmation({
       ...BASE_ARGS,
       isApproved: true,
       reply,
       expensesRepo: createExpensesRepo({
-        createFromPending: vi.fn().mockRejectedValue(new Error("db error")),
+        createFromPending: vi.fn().mockRejectedValue(error),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
+      errorHandler,
     });
 
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "登録に失敗しました。もう一度お試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "expensesRepo.createFromPending",
+      reply,
+      userText: "登録に失敗しました。もう一度お試しください。",
+    });
   });
 
-  it("キャンセル時にDBの削除に失敗した場合、エラーメッセージを送信する", async () => {
+  it("キャンセル時にDBの削除に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createReply();
+    const errorHandler = createErrorHandler();
+    const error = new Error("db error");
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -150,20 +176,24 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       reply,
       expensesRepo: createExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
-        delete: vi.fn().mockRejectedValue(new Error("db error")),
+        delete: vi.fn().mockRejectedValue(error),
       }),
+      errorHandler,
     });
 
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error,
+      label: "pendingExpensesRepo.delete",
+      reply,
+    });
   });
 
   it("異なる webhookEventId の場合、何もしない", async () => {
     const reply = createReply();
     const expensesRepo = createExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
+    const errorHandler = createErrorHandler();
 
     await handleConfirmation({
       ...BASE_ARGS,
@@ -172,6 +202,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       reply,
       expensesRepo,
       pendingExpensesRepo,
+      errorHandler,
     });
 
     expect(reply.send).not.toHaveBeenCalled();
