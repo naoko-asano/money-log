@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Reply } from "#api/_usecases/_ports/reply.js";
+import { createMockedReply } from "#api/_test-utils/reply.js";
 import { createReplyWithLog } from "./reply-with-log";
 
 const CONTEXT = {
@@ -8,16 +8,9 @@ const CONTEXT = {
   webhookEventType: "text",
 };
 
-function createReply(): Reply {
-  return {
-    send: vi.fn().mockResolvedValue(undefined),
-    sendWithQuickItems: vi.fn().mockResolvedValue(undefined),
-  };
-}
-
 describe("ログ付きのreplyを実行した場合", () => {
   it("sendでログを出力してから元のreplyのsendを呼ぶ", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await createReplyWithLog(reply, CONTEXT).send("こんにちは");
@@ -33,7 +26,7 @@ describe("ログ付きのreplyを実行した場合", () => {
   });
 
   it("sendWithQuickItemsでログを出力してから元のreplyのsendWithQuickItemsを呼ぶ", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const items = [
       {

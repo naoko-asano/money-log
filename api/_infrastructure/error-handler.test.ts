@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
+import { createMockedReply } from "#api/_test-utils/reply.js";
 import type { Reply } from "#api/_usecases/_ports/reply.js";
 import { createErrorHandler } from "./error-handler";
 
@@ -9,16 +10,9 @@ const CONTEXT = {
   webhookEventType: "text",
 };
 
-function createReply(): Reply {
-  return {
-    send: vi.fn().mockResolvedValue(undefined),
-    sendWithQuickItems: vi.fn().mockResolvedValue(undefined),
-  };
-}
-
 describe("エラーハンドラーを実行した場合", () => {
   it("contextを伴ってエラーをログに記録し、replyでユーザーに通知する", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const error = new Error("db error");
     const logSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -40,7 +34,7 @@ describe("エラーハンドラーを実行した場合", () => {
   });
 
   it("userTextを省略するとDEFAULT_USER_ERROR_TEXTでユーザーに通知する", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await createErrorHandler(CONTEXT).run({

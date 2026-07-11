@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ErrorHandler } from "./_ports/error-handler";
+import { createMockedErrorHandler } from "#api/_test-utils/error-handler.js";
+import { createMockedReply } from "#api/_test-utils/reply.js";
 import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
-import type { Reply } from "./_ports/reply";
 import { handleExpenseInput } from "./handle-expense-input";
 
 const EXPENSE = {
@@ -20,13 +20,6 @@ const BASE_ARGS = {
   userId: "user-001",
   webhookEventId: "event-001",
 };
-
-function createReply(): Reply {
-  return {
-    send: vi.fn().mockResolvedValue(undefined),
-    sendWithQuickItems: vi.fn().mockResolvedValue(undefined),
-  };
-}
 
 function createExpensesRepo(
   overrides: Partial<ExpensesRepo> = {},
@@ -49,17 +42,11 @@ function createPendingExpensesRepo(
   };
 }
 
-function createErrorHandler(): ErrorHandler {
-  return {
-    run: vi.fn().mockResolvedValue(undefined),
-  };
-}
-
 describe("支出が入力された場合", () => {
   it("支出の解析に成功した場合、確認待ち支出を作成して確認メッセージを送信する", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -82,9 +69,9 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ちの支出がある場合、確認メッセージを送信する", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const parseInput = vi.fn();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -109,9 +96,9 @@ describe("支出が入力された場合", () => {
   });
 
   it("同じ webhookEventId の支出が既に存在する場合、何も送信しない", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const parseInput = vi.fn();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -130,9 +117,9 @@ describe("支出が入力された場合", () => {
   });
 
   it("入力の解析に失敗した場合、エラーハンドラーを呼び出す", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const pendingExpensesRepo = createPendingExpensesRepo();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
     const error = new Error("parse error");
 
     await handleExpenseInput({
@@ -155,9 +142,9 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ち支出の取得に失敗した場合、エラーハンドラーを呼び出す", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const parseInput = vi.fn();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
     const error = new Error("db error");
 
     await handleExpenseInput({
@@ -182,9 +169,9 @@ describe("支出が入力された場合", () => {
   });
 
   it("支出の存在確認に失敗した場合、エラーハンドラーを呼び出す", async () => {
-    const reply = createReply();
+    const reply = createMockedReply();
     const parseInput = vi.fn();
-    const errorHandler = createErrorHandler();
+    const errorHandler = createMockedErrorHandler();
     const error = new Error("db error");
 
     await handleExpenseInput({
@@ -209,8 +196,8 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ち支出の作成に失敗した場合、エラーハンドラーを呼び出す", async () => {
-    const reply = createReply();
-    const errorHandler = createErrorHandler();
+    const reply = createMockedReply();
+    const errorHandler = createMockedErrorHandler();
     const error = new Error("db error");
 
     await handleExpenseInput({
@@ -234,8 +221,8 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ち支出の作成が競合した場合、既存の確認メッセージを送信する", async () => {
-    const reply = createReply();
-    const errorHandler = createErrorHandler();
+    const reply = createMockedReply();
+    const errorHandler = createMockedErrorHandler();
 
     await handleExpenseInput({
       ...BASE_ARGS,
@@ -263,8 +250,8 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ち支出の作成が競合し、取得にも失敗した場合、エラーハンドラーを呼び出す", async () => {
-    const reply = createReply();
-    const errorHandler = createErrorHandler();
+    const reply = createMockedReply();
+    const errorHandler = createMockedErrorHandler();
     const error = new Error("db error");
     const getPendingExpense = vi
       .fn()
@@ -294,8 +281,8 @@ describe("支出が入力された場合", () => {
   });
 
   it("確認待ち支出の作成が競合し、取得でも見つからない場合、エラーメッセージを送信する", async () => {
-    const reply = createReply();
-    const errorHandler = createErrorHandler();
+    const reply = createMockedReply();
+    const errorHandler = createMockedErrorHandler();
     const getPendingExpense = vi
       .fn()
       .mockResolvedValueOnce(null)
