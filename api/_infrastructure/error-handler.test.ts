@@ -6,7 +6,7 @@ import { createErrorHandler } from "./error-handler";
 const CONTEXT = {
   userId: "user-001",
   webhookEventId: "event-001",
-  type: "text",
+  webhookEventType: "text",
 };
 
 function createReply(): Reply {

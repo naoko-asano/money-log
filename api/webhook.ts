@@ -38,12 +38,12 @@ export async function POST(req: Request): Promise<Response> {
     const reply = createReplyWithLog(createReply(event.replyToken), {
       userId: event.userId,
       webhookEventId: event.webhookEventId,
-      type: event.type,
+      webhookEventType: event.type,
     });
     const errorHandler = createErrorHandler({
       userId: event.userId,
       webhookEventId: event.webhookEventId,
-      type: event.type,
+      webhookEventType: event.type,
     });
 
     try {

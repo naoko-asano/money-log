@@ -5,7 +5,7 @@ import { createReplyWithLog } from "./reply-with-log";
 const CONTEXT = {
   userId: "user-001",
   webhookEventId: "event-001",
-  type: "text",
+  webhookEventType: "text",
 };
 
 function createReply(): Reply {
