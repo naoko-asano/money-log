@@ -93,7 +93,12 @@ export async function POST(req: Request): Promise<Response> {
       }
     } catch (error) {
       console.error(
-        `webhook event processing failed (userId: ${event.userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
+        "webhook event processing failed:",
+        {
+          userId: event.userId,
+          webhookEventId: event.webhookEventId,
+          webhookEventType: event.type,
+        },
         error,
       );
     }
@@ -112,7 +117,8 @@ function parseConfirmationPayload(
     parsed = JSON.parse(rawJson);
   } catch {
     console.error(
-      `webhook invalid confirmationPayload (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      "webhook invalid confirmationPayload:",
+      { userId, webhookEventId, webhookEventType: "confirmation" },
       rawJson,
     );
     return null;
@@ -123,7 +129,8 @@ function parseConfirmationPayload(
       .pendingWebhookEventId !== "string"
   ) {
     console.error(
-      `webhook unexpected confirmationPayload shape (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
+      "webhook unexpected confirmationPayload shape:",
+      { userId, webhookEventId, webhookEventType: "confirmation" },
       rawJson,
     );
     return null;
