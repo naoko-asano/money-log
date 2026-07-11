@@ -36,16 +36,17 @@ export async function POST(req: Request): Promise<Response> {
   for (const event of events) {
     const { replyToken: _replyToken, ...loggableEvent } = event;
     console.log("webhook input:", loggableEvent);
-    const reply = createReplyWithLog(createReply(event.replyToken), {
+
+    const eventContext = {
       userId: event.userId,
       webhookEventId: event.webhookEventId,
       webhookEventType: event.type,
-    });
-    const errorHandler = createErrorHandler({
-      userId: event.userId,
-      webhookEventId: event.webhookEventId,
-      webhookEventType: event.type,
-    });
+    };
+    const reply = createReplyWithLog(
+      createReply(event.replyToken),
+      eventContext,
+    );
+    const errorHandler = createErrorHandler(eventContext);
 
     try {
       if (event.type === "confirmation") {
@@ -92,15 +93,7 @@ export async function POST(req: Request): Promise<Response> {
         });
       }
     } catch (error) {
-      console.error(
-        "webhook event processing failed:",
-        {
-          userId: event.userId,
-          webhookEventId: event.webhookEventId,
-          webhookEventType: event.type,
-        },
-        error,
-      );
+      console.error("webhook event processing failed:", eventContext, error);
     }
   }
 
