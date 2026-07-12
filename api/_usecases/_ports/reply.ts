@@ -1,4 +1,4 @@
-type QuickItem = {
+export type QuickItem = {
   type: "action";
   action: {
     type: "postback";

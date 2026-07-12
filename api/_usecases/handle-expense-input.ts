@@ -6,6 +6,7 @@ import type { ErrorHandler } from "./_ports/error-handler.js";
 import type { ExpensesRepo } from "./_ports/expenses-repo.js";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo.js";
 import type { Reply } from "./_ports/reply.js";
+import { buildConfirmationItems } from "./confirmation-payload.js";
 
 type Args = {
   userId: string;
@@ -113,29 +114,6 @@ export async function handleExpenseInput({
   }
 
   await reply.send(DEFAULT_USER_ERROR_TEXT);
-}
-
-function buildConfirmationItems(pendingWebhookEventId: string) {
-  return [
-    {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "はい",
-        data: JSON.stringify({ action: "ok", pendingWebhookEventId }),
-        displayText: "はい",
-      },
-    },
-    {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "いいえ",
-        data: JSON.stringify({ action: "ng", pendingWebhookEventId }),
-        displayText: "いいえ",
-      },
-    },
-  ];
 }
 
 async function askForConfirmation({

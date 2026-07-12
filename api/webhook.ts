@@ -9,6 +9,7 @@ import {
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import { parseConfirmationPayload } from "./_usecases/confirmation-payload.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
 import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
@@ -52,11 +53,15 @@ export async function POST(req: Request): Promise<Response> {
       if (event.type === "confirmation") {
         const confirmation = parseConfirmationPayload(
           event.confirmationPayload,
-          event.userId,
-          event.webhookEventId,
         );
-
-        if (!confirmation) continue;
+        if (!confirmation) {
+          await errorHandler.run({
+            error: new Error("invalid or unexpected confirmationPayload"),
+            label: "parseConfirmationPayload",
+            reply,
+          });
+          continue;
+        }
         await handleConfirmation({
           userId: event.userId,
           isApproved: confirmation.action === "ok",
@@ -98,35 +103,4 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   return new Response(null, { status: 200 });
-}
-
-function parseConfirmationPayload(
-  rawJson: string,
-  userId: string,
-  webhookEventId: string,
-): { action: string; pendingWebhookEventId: string } | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(rawJson);
-  } catch {
-    console.error(
-      "webhook invalid confirmationPayload:",
-      { userId, webhookEventId, webhookEventType: "confirmation" },
-      rawJson,
-    );
-    return null;
-  }
-  if (
-    typeof (parsed as { action?: unknown }).action !== "string" ||
-    typeof (parsed as { pendingWebhookEventId?: unknown })
-      .pendingWebhookEventId !== "string"
-  ) {
-    console.error(
-      "webhook unexpected confirmationPayload shape:",
-      { userId, webhookEventId, webhookEventType: "confirmation" },
-      rawJson,
-    );
-    return null;
-  }
-  return parsed as { action: string; pendingWebhookEventId: string };
 }
