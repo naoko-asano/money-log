@@ -21,7 +21,7 @@ describe("出費登録の是非を確認する選択肢の作成", () => {
   });
 });
 
-describe("出費登録の是非を確認したpayloadを解析", () => {
+describe("出費登録の是非を確認したpayloadの解析", () => {
   it("作成時に埋め込んだdataを元の形に復元する", () => {
     const items = buildConfirmationItems("event-001");
     const okData = items[0]?.data ?? "";
