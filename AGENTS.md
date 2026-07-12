@@ -63,6 +63,12 @@ money-log/
 2. `pnpm check` — Biome lint/formatチェック
 3. テストに関係する変更の場合は `pnpm test:run`
 
+## テストの書き方
+
+- ヘルパー関数のプレフィックスは `make` ではなく `create` を使う
+- `describe` にはメソッド名ではなく振る舞いを書く
+- モックの呼び出しを検証する際は、引数（`toHaveBeenCalledWith`）と呼ばれた回数（`toHaveBeenCalledOnce` など）を検証する
+
 ## 開発メモ
 
 - LINE Webhookの署名検証は必ず行う（セキュリティ上必須）
