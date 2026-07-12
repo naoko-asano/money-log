@@ -1,12 +1,15 @@
 import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
+import { createErrorHandler } from "./_infrastructure/error-handler.js";
 import {
   createReply,
+  createReplyWithLog,
   mediaReader,
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
+import { parseConfirmationPayload } from "./_usecases/confirmation-payload.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
 import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
@@ -32,17 +35,33 @@ export async function POST(req: Request): Promise<Response> {
   const events = parseWebhookEvents(rawBody);
 
   for (const event of events) {
-    const reply = createReply(event.replyToken);
+    const { replyToken: _replyToken, ...loggableEvent } = event;
+    console.log("webhook input:", loggableEvent);
+
+    const eventContext = {
+      userId: event.userId,
+      webhookEventId: event.webhookEventId,
+      webhookEventType: event.type,
+    };
+    const reply = createReplyWithLog(
+      createReply(event.replyToken),
+      eventContext,
+    );
+    const errorHandler = createErrorHandler(eventContext);
 
     try {
       if (event.type === "confirmation") {
         const confirmation = parseConfirmationPayload(
           event.confirmationPayload,
-          event.userId,
-          event.webhookEventId,
         );
-
-        if (!confirmation) continue;
+        if (!confirmation) {
+          await errorHandler.run({
+            error: new Error("invalid confirmationPayload"),
+            label: "parseConfirmationPayload",
+            reply,
+          });
+          continue;
+        }
         await handleConfirmation({
           userId: event.userId,
           isApproved: confirmation.action === "ok",
@@ -50,6 +69,7 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       } else if (event.type === "text") {
         await handleExpenseInput({
@@ -59,6 +79,7 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       } else if (event.type === "image") {
         await handleExpenseInput({
@@ -73,44 +94,17 @@ export async function POST(req: Request): Promise<Response> {
           reply,
           expensesRepo,
           pendingExpensesRepo,
+          errorHandler,
         });
       }
     } catch (error) {
-      console.error(
-        `webhook event processing failed (userId: ${event.userId}, webhookEventId: ${event.webhookEventId}, type: ${event.type}):`,
+      await errorHandler.run({
         error,
-      );
+        label: "webhook event processing",
+        reply,
+      });
     }
   }
 
   return new Response(null, { status: 200 });
-}
-
-function parseConfirmationPayload(
-  rawJson: string,
-  userId: string,
-  webhookEventId: string,
-): { action: string; pendingWebhookEventId: string } | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(rawJson);
-  } catch {
-    console.error(
-      `webhook invalid confirmationPayload (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
-      rawJson,
-    );
-    return null;
-  }
-  if (
-    typeof (parsed as { action?: unknown }).action !== "string" ||
-    typeof (parsed as { pendingWebhookEventId?: unknown })
-      .pendingWebhookEventId !== "string"
-  ) {
-    console.error(
-      `webhook unexpected confirmationPayload shape (userId: ${userId}, webhookEventId: ${webhookEventId}):`,
-      rawJson,
-    );
-    return null;
-  }
-  return parsed as { action: string; pendingWebhookEventId: string };
 }
