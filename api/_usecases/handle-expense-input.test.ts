@@ -280,7 +280,7 @@ describe("支出が入力された場合", () => {
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 
-  it("確認待ち支出の作成が競合し、取得でも見つからない場合、エラーメッセージを送信する", async () => {
+  it("確認待ち支出の作成が競合し、取得でも見つからない場合、エラーハンドラーを呼び出す", async () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
     const getPendingExpense = vi
@@ -301,10 +301,12 @@ describe("支出が入力された場合", () => {
     });
 
     expect(getPendingExpense).toHaveBeenCalledTimes(2);
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith(
-      "エラーが発生しました。しばらく経ってからお試しください。",
-    );
+    expect(errorHandler.run).toHaveBeenCalledOnce();
+    expect(errorHandler.run).toHaveBeenCalledWith({
+      error: expect.any(Error),
+      label: "pendingExpensesRepo.create (conflict recovery not found)",
+      reply,
+    });
     expect(reply.sendWithQuickItems).not.toHaveBeenCalled();
   });
 });

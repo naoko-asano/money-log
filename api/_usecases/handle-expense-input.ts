@@ -1,4 +1,3 @@
-import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
 import type { Expense } from "#shared/model/expense.js";
 import type { PendingExpense } from "#shared/model/pending-expense.js";
 import { formatDate } from "#shared/utils/date.js";
@@ -113,7 +112,13 @@ export async function handleExpenseInput({
     return;
   }
 
-  await reply.send(DEFAULT_USER_ERROR_TEXT);
+  await errorHandler.run({
+    error: new Error(
+      "pendingExpensesRepo.create conflicted, but no pending expense was found on recovery",
+    ),
+    label: "pendingExpensesRepo.create (conflict recovery not found)",
+    reply,
+  });
 }
 
 async function askForConfirmation({
