@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_USER_ERROR_TEXT } from "#api/_const/error.js";
 import { createMockedReply } from "#api/_test-utils/reply.js";
-import type { Reply } from "#api/_usecases/_ports/reply.js";
 import { createErrorHandler } from "./error-handler";
 
 const CONTEXT = {
@@ -49,10 +48,9 @@ describe("エラーハンドラーを実行した場合", () => {
 
   it("reply.sendが失敗した場合、エラーを伝播する", async () => {
     const sendError = new Error("send error");
-    const reply: Reply = {
+    const reply = createMockedReply({
       send: vi.fn().mockRejectedValue(sendError),
-      sendWithQuickItems: vi.fn(),
-    };
+    });
 
     await expect(
       createErrorHandler(CONTEXT).run({

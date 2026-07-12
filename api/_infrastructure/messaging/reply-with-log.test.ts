@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMockedReply } from "#api/_test-utils/reply.js";
-import type { Reply } from "#api/_usecases/_ports/reply.js";
 import { createReplyWithLog } from "./reply-with-log";
 
 const CONTEXT = {
@@ -52,10 +51,9 @@ describe("ログ付きのreplyを実行した場合", () => {
 
   it("sendが失敗した場合、失敗をログに記録し、エラーは伝播しない", async () => {
     const error = new Error("send error");
-    const reply: Reply = {
+    const reply = createMockedReply({
       send: vi.fn().mockRejectedValue(error),
-      sendWithQuickItems: vi.fn(),
-    };
+    });
     const errorLogSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -76,10 +74,9 @@ describe("ログ付きのreplyを実行した場合", () => {
   it("sendWithQuickItemsが失敗した場合、失敗をログに記録し、エラーは伝播しない", async () => {
     const error = new Error("send error");
     const items = [{ label: "OK", data: "ok" }];
-    const reply: Reply = {
-      send: vi.fn(),
+    const reply = createMockedReply({
       sendWithQuickItems: vi.fn().mockRejectedValue(error),
-    };
+    });
     const errorLogSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
