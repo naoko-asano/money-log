@@ -4,7 +4,7 @@ export type ErrorHandler = {
   run(args: {
     error: unknown;
     label: string;
-    reply: Reply;
+    reply: Pick<Reply, "send">;
     userText?: string;
   }): Promise<void>;
 };
