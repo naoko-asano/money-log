@@ -29,17 +29,7 @@ describe("ログ付きのreplyを実行した場合", () => {
   it("sendWithQuickItemsが成功した場合、元のreplyのsendWithQuickItemsを呼んでからログを出力する", async () => {
     const reply = createMockedReply();
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const items = [
-      {
-        type: "action" as const,
-        action: {
-          type: "postback" as const,
-          label: "OK",
-          data: "ok",
-          displayText: "OK",
-        },
-      },
-    ];
+    const items = [{ label: "OK", data: "ok" }];
 
     await createReplyWithLog(reply, CONTEXT).sendWithQuickItems(
       "確認してください",
@@ -85,17 +75,7 @@ describe("ログ付きのreplyを実行した場合", () => {
 
   it("sendWithQuickItemsが失敗した場合、失敗をログに記録し、エラーは伝播しない", async () => {
     const error = new Error("send error");
-    const items = [
-      {
-        type: "action" as const,
-        action: {
-          type: "postback" as const,
-          label: "OK",
-          data: "ok",
-          displayText: "OK",
-        },
-      },
-    ];
+    const items = [{ label: "OK", data: "ok" }];
     const reply: Reply = {
       send: vi.fn(),
       sendWithQuickItems: vi.fn().mockRejectedValue(error),

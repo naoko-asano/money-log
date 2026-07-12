@@ -1,11 +1,6 @@
 export type QuickItem = {
-  type: "action";
-  action: {
-    type: "postback";
-    label: string;
-    data: string;
-    displayText: string;
-  };
+  label: string;
+  data: string;
 };
 
 export type Reply = {

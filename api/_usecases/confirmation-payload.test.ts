@@ -5,27 +5,17 @@ import {
 } from "./confirmation-payload";
 
 describe("出費登録の是非を確認する選択肢の作成", () => {
-  it("はい/いいえのpostbackアクションを生成し、それぞれにpendingWebhookEventIdを埋め込む", () => {
+  it("はい/いいえの選択肢を生成し、それぞれにpendingWebhookEventIdを埋め込む", () => {
     const items = buildConfirmationItems("event-001");
 
     expect(items).toEqual([
       {
-        type: "action",
-        action: {
-          type: "postback",
-          label: "はい",
-          data: '{"action":"ok","pendingWebhookEventId":"event-001"}',
-          displayText: "はい",
-        },
+        label: "はい",
+        data: '{"action":"ok","pendingWebhookEventId":"event-001"}',
       },
       {
-        type: "action",
-        action: {
-          type: "postback",
-          label: "いいえ",
-          data: '{"action":"cancel","pendingWebhookEventId":"event-001"}',
-          displayText: "いいえ",
-        },
+        label: "いいえ",
+        data: '{"action":"cancel","pendingWebhookEventId":"event-001"}',
       },
     ]);
   });
@@ -34,7 +24,7 @@ describe("出費登録の是非を確認する選択肢の作成", () => {
 describe("出費登録の是非を確認したpayloadを解析", () => {
   it("作成時に埋め込んだdataを元の形に復元する", () => {
     const items = buildConfirmationItems("event-001");
-    const okData = items[0]?.action.data ?? "";
+    const okData = items[0]?.data ?? "";
 
     expect(parseConfirmationPayload(okData)).toEqual({
       action: "ok",

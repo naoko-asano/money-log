@@ -10,28 +10,18 @@ export function buildConfirmationItems(
 ): QuickItem[] {
   return [
     {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "はい",
-        data: JSON.stringify({
-          action: "ok",
-          pendingWebhookEventId,
-        } satisfies ConfirmationPayload),
-        displayText: "はい",
-      },
+      label: "はい",
+      data: JSON.stringify({
+        action: "ok",
+        pendingWebhookEventId,
+      } satisfies ConfirmationPayload),
     },
     {
-      type: "action" as const,
-      action: {
-        type: "postback" as const,
-        label: "いいえ",
-        data: JSON.stringify({
-          action: "cancel",
-          pendingWebhookEventId,
-        } satisfies ConfirmationPayload),
-        displayText: "いいえ",
-      },
+      label: "いいえ",
+      data: JSON.stringify({
+        action: "cancel",
+        pendingWebhookEventId,
+      } satisfies ConfirmationPayload),
     },
   ];
 }
