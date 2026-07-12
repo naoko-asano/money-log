@@ -1,9 +1,13 @@
 import type { QuickItem } from "./_ports/reply.js";
 
+export type ConfirmationAction = (typeof CONFIRMATION_ACTIONS)[number];
+
 export type ConfirmationPayload = {
-  action: string;
+  action: ConfirmationAction;
   pendingWebhookEventId: string;
 };
+
+const CONFIRMATION_ACTIONS = ["ok", "cancel"] as const;
 
 export function buildConfirmationItems(
   pendingWebhookEventId: string,
@@ -35,12 +39,22 @@ export function parseConfirmationPayload(
   } catch {
     return null;
   }
+
+  const { action, pendingWebhookEventId } = parsed as {
+    action?: unknown;
+    pendingWebhookEventId?: unknown;
+  };
+
   if (
-    typeof (parsed as { action?: unknown }).action !== "string" ||
-    typeof (parsed as { pendingWebhookEventId?: unknown })
-      .pendingWebhookEventId !== "string"
+    !isConfirmationAction(action) ||
+    typeof pendingWebhookEventId !== "string"
   ) {
     return null;
   }
-  return parsed as ConfirmationPayload;
+
+  return { action, pendingWebhookEventId };
+}
+
+function isConfirmationAction(s: unknown): s is ConfirmationAction {
+  return (CONFIRMATION_ACTIONS as readonly unknown[]).includes(s);
 }

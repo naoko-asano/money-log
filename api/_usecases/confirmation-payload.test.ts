@@ -42,6 +42,14 @@ describe("出費登録の是非を確認したpayloadを解析", () => {
     ).toBeNull();
   });
 
+  it("actionがok/cancel以外の場合、nullを返す", () => {
+    expect(
+      parseConfirmationPayload(
+        '{"action":"foo","pendingWebhookEventId":"event-001"}',
+      ),
+    ).toBeNull();
+  });
+
   it("pendingWebhookEventIdが欠けている場合、nullを返す", () => {
     expect(parseConfirmationPayload('{"action":"ok"}')).toBeNull();
   });
