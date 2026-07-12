@@ -98,7 +98,11 @@ export async function POST(req: Request): Promise<Response> {
         });
       }
     } catch (error) {
-      console.error("webhook event processing failed:", eventContext, error);
+      await errorHandler.run({
+        error,
+        label: "webhook event processing",
+        reply,
+      });
     }
   }
 
