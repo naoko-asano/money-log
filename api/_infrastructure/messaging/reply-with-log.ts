@@ -6,12 +6,20 @@ export function createReplyWithLog(
 ): Reply {
   return {
     async send(text) {
-      console.log("webhook output:", context, text);
-      await reply.send(text);
+      try {
+        await reply.send(text);
+        console.log("webhook output:", context, text);
+      } catch (error) {
+        console.error("webhook output failed:", context, text, error);
+      }
     },
     async sendWithQuickItems(text, items) {
-      console.log("webhook output:", context, text, items);
-      await reply.sendWithQuickItems(text, items);
+      try {
+        await reply.sendWithQuickItems(text, items);
+        console.log("webhook output:", context, text, items);
+      } catch (error) {
+        console.error("webhook output failed:", context, text, items, error);
+      }
     },
   };
 }
