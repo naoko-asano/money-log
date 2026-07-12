@@ -56,7 +56,7 @@ export async function POST(req: Request): Promise<Response> {
         );
         if (!confirmation) {
           await errorHandler.run({
-            error: new Error("invalid or unexpected confirmationPayload"),
+            error: new Error("invalid confirmationPayload"),
             label: "parseConfirmationPayload",
             reply,
           });
