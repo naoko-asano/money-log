@@ -58,6 +58,11 @@ describe("支出が入力された場合", () => {
     });
 
     expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
+    expect(pendingExpensesRepo.create).toHaveBeenCalledWith(
+      "user-001",
+      EXPENSE,
+      "event-001",
+    );
     expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
     expect(reply.sendWithQuickItems).toHaveBeenCalledWith(
       expect.not.stringContaining(
@@ -271,6 +276,7 @@ describe("支出が入力された場合", () => {
     });
 
     expect(getPendingExpense).toHaveBeenCalledTimes(2);
+    expect(getPendingExpense).toHaveBeenCalledWith("user-001");
     expect(errorHandler.run).toHaveBeenCalledOnce();
     expect(errorHandler.run).toHaveBeenCalledWith({
       error,
@@ -301,6 +307,7 @@ describe("支出が入力された場合", () => {
     });
 
     expect(getPendingExpense).toHaveBeenCalledTimes(2);
+    expect(getPendingExpense).toHaveBeenCalledWith("user-001");
     expect(errorHandler.run).toHaveBeenCalledOnce();
     expect(errorHandler.run).toHaveBeenCalledWith({
       error: expect.any(Error),

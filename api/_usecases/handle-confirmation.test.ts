@@ -55,6 +55,10 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     });
 
     expect(expensesRepo.createFromPending).toHaveBeenCalledOnce();
+    expect(expensesRepo.createFromPending).toHaveBeenCalledWith(
+      "user-001",
+      PENDING_EXPENSE,
+    );
     expect(reply.send).toHaveBeenCalledOnce();
     expect(reply.send).toHaveBeenCalledWith("登録しました！");
   });
@@ -75,6 +79,10 @@ describe("支出登録の確認ボタンが押下された場合", () => {
     });
 
     expect(pendingExpensesRepo.delete).toHaveBeenCalledOnce();
+    expect(pendingExpensesRepo.delete).toHaveBeenCalledWith(
+      "user-001",
+      "event-001",
+    );
     expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
     expect(reply.send).toHaveBeenCalledOnce();
     expect(reply.send).toHaveBeenCalledWith("キャンセルしました。");
