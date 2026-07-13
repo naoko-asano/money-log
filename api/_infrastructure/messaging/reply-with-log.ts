@@ -1,25 +1,23 @@
 import type { Reply } from "#api/_usecases/_ports/reply.js";
 
-export function createReplyWithLog(
-  reply: Reply,
-  context: Record<string, unknown>,
-): Reply {
+type Context = Record<string, unknown>;
+
+export function createReplyWithLog(reply: Reply, context: Context): Reply {
   return {
-    async send(text) {
-      try {
-        await reply.send(text);
-        console.log("reply sent:", context);
-      } catch (error) {
-        console.error("reply failed:", context, error);
-      }
-    },
-    async sendWithQuickItems(text, items) {
-      try {
-        await reply.sendWithQuickItems(text, items);
-        console.log("reply sent:", context);
-      } catch (error) {
-        console.error("reply failed:", context, error);
-      }
-    },
+    send: (text) => withLog(context, () => reply.send(text)),
+    sendWithQuickItems: (text, items) =>
+      withLog(context, () => reply.sendWithQuickItems(text, items)),
   };
+}
+
+async function withLog(
+  context: Context,
+  action: () => Promise<void>,
+): Promise<void> {
+  try {
+    await action();
+    console.log("reply sent:", context);
+  } catch (error) {
+    console.error("reply failed:", context, error);
+  }
 }
