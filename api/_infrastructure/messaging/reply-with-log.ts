@@ -8,17 +8,17 @@ export function createReplyWithLog(
     async send(text) {
       try {
         await reply.send(text);
-        console.log("webhook output:", context, text);
+        console.log("reply sent:", context);
       } catch (error) {
-        console.error("webhook output failed:", context, text, error);
+        console.error("reply failed:", context, error);
       }
     },
     async sendWithQuickItems(text, items) {
       try {
         await reply.sendWithQuickItems(text, items);
-        console.log("webhook output:", context, text, items);
+        console.log("reply sent:", context);
       } catch (error) {
-        console.error("webhook output failed:", context, text, items, error);
+        console.error("reply failed:", context, error);
       }
     },
   };

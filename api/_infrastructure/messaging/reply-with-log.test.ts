@@ -18,11 +18,7 @@ describe("ログ付きのreplyを実行した場合", () => {
     expect(reply.send).toHaveBeenCalledOnce();
     expect(reply.send).toHaveBeenCalledWith("こんにちは");
     expect(logSpy).toHaveBeenCalledOnce();
-    expect(logSpy).toHaveBeenCalledWith(
-      "webhook output:",
-      CONTEXT,
-      "こんにちは",
-    );
+    expect(logSpy).toHaveBeenCalledWith("reply sent:", CONTEXT);
   });
 
   it("sendWithQuickItemsが成功した場合、元のreplyのsendWithQuickItemsを呼んでからログを出力する", async () => {
@@ -41,12 +37,7 @@ describe("ログ付きのreplyを実行した場合", () => {
       items,
     );
     expect(logSpy).toHaveBeenCalledOnce();
-    expect(logSpy).toHaveBeenCalledWith(
-      "webhook output:",
-      CONTEXT,
-      "確認してください",
-      items,
-    );
+    expect(logSpy).toHaveBeenCalledWith("reply sent:", CONTEXT);
   });
 
   it("sendが失敗した場合、失敗をログに記録し、エラーは伝播しない", async () => {
@@ -62,12 +53,7 @@ describe("ログ付きのreplyを実行した場合", () => {
     ).resolves.toBeUndefined();
 
     expect(errorLogSpy).toHaveBeenCalledOnce();
-    expect(errorLogSpy).toHaveBeenCalledWith(
-      "webhook output failed:",
-      CONTEXT,
-      "こんにちは",
-      error,
-    );
+    expect(errorLogSpy).toHaveBeenCalledWith("reply failed:", CONTEXT, error);
     expect(logSpy).not.toHaveBeenCalled();
   });
 
@@ -88,13 +74,7 @@ describe("ログ付きのreplyを実行した場合", () => {
     ).resolves.toBeUndefined();
 
     expect(errorLogSpy).toHaveBeenCalledOnce();
-    expect(errorLogSpy).toHaveBeenCalledWith(
-      "webhook output failed:",
-      CONTEXT,
-      "確認してください",
-      items,
-      error,
-    );
+    expect(errorLogSpy).toHaveBeenCalledWith("reply failed:", CONTEXT, error);
     expect(logSpy).not.toHaveBeenCalled();
   });
 });

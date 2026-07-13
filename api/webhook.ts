@@ -35,14 +35,13 @@ export async function POST(req: Request): Promise<Response> {
   const events = parseWebhookEvents(rawBody);
 
   for (const event of events) {
-    const { replyToken: _replyToken, ...loggableEvent } = event;
-    console.log("webhook input:", loggableEvent);
-
     const eventContext = {
       userId: event.userId,
       webhookEventId: event.webhookEventId,
       webhookEventType: event.type,
     };
+    console.log("event received:", eventContext);
+
     const reply = createReplyWithLog(
       createReply(event.replyToken),
       eventContext,
