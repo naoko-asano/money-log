@@ -32,9 +32,9 @@ describe("テキストから支出を解析する", () => {
         category: "食費",
       }),
     });
-    await expect(createExpenseParser(ai).fromText("コーヒー")).rejects.toThrow(
-      "Invalid date",
-    );
+    await expect(
+      createExpenseParser(ai).fromText("コーヒー 500円"),
+    ).rejects.toThrow("Invalid date");
   });
 
   it("無効なカテゴリでエラーを投げる", async () => {
@@ -45,9 +45,9 @@ describe("テキストから支出を解析する", () => {
         category: "不正なカテゴリ",
       }),
     });
-    await expect(createExpenseParser(ai).fromText("コーヒー")).rejects.toThrow(
-      "Invalid category",
-    );
+    await expect(
+      createExpenseParser(ai).fromText("コーヒー 500円"),
+    ).rejects.toThrow("Invalid category");
   });
 
   it("全ての項目が欠落している場合、エラーを投げる", async () => {
