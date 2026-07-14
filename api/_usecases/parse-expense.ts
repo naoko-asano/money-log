@@ -6,15 +6,10 @@ import type { Ai, ImageItem } from "./_ports/ai.js";
 const EXPENSE_SCHEMA = {
   type: "object",
   properties: {
-    date: {
-      type: "string",
-      description: "YYYY-MM-DD形式の日付",
-      nullable: true,
-    },
-    amount: { type: "number", description: "金額（円）", nullable: true },
-    category: { type: "string", enum: CATEGORIES, nullable: true },
+    date: { type: "string", description: "YYYY-MM-DD形式の日付" },
+    amount: { type: "number", description: "金額（円）" },
+    category: { type: "string", enum: CATEGORIES },
   },
-  required: ["date", "amount", "category"],
 };
 
 export function createExpenseParser(ai: Ai) {
@@ -61,7 +56,7 @@ function buildSystemPrompt(): string {
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
 今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
 カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}
-支出情報を読み取れない場合は、date・amount・categoryをすべてnullにしてください。`;
+支出情報を読み取れない場合は、date・amount・categoryのフィールドをすべて省略してください。`;
 }
 
 function toExpense(result: string): Expense {
