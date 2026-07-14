@@ -32,9 +32,9 @@ describe("テキストから支出を解析する", () => {
         category: "食費",
       }),
     });
-    await expect(createExpenseParser(ai).fromText("コーヒー")).rejects.toThrow(
-      "Invalid date",
-    );
+    await expect(
+      createExpenseParser(ai).fromText("コーヒー 500円"),
+    ).rejects.toThrow("Invalid date");
   });
 
   it("無効なカテゴリでエラーを投げる", async () => {
@@ -45,9 +45,41 @@ describe("テキストから支出を解析する", () => {
         category: "不正なカテゴリ",
       }),
     });
-    await expect(createExpenseParser(ai).fromText("コーヒー")).rejects.toThrow(
-      "Invalid category",
+    await expect(
+      createExpenseParser(ai).fromText("コーヒー 500円"),
+    ).rejects.toThrow("Invalid category");
+  });
+
+  it("全ての項目が欠落している場合、エラーを投げる", async () => {
+    const ai = createAi({ returnValue: JSON.stringify({}) });
+    await expect(
+      createExpenseParser(ai).fromText("あいうえお"),
+    ).rejects.toThrow("Could not parse expense from input");
+  });
+
+  it("欠落している項目が含まれる場合、エラーを投げる", async () => {
+    const ai = createAi({
+      returnValue: JSON.stringify({
+        date: "2026-01-15",
+        amount: 500,
+      }),
+    });
+    await expect(createExpenseParser(ai).fromText("500円")).rejects.toThrow(
+      "Could not parse expense from input",
     );
+  });
+
+  it("nullが含まれる場合、エラーを投げる", async () => {
+    const ai = createAi({
+      returnValue: JSON.stringify({
+        date: null,
+        amount: 500,
+        category: "食費",
+      }),
+    });
+    await expect(
+      createExpenseParser(ai).fromText("20xx/xx/xx コーヒー 500円"),
+    ).rejects.toThrow("Could not parse expense from input");
   });
 });
 

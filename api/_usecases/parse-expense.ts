@@ -1,3 +1,4 @@
+import { isNullish } from "#api/_lib/is-nullish.js";
 import { CATEGORIES, type Expense, isCategory } from "#shared/model/expense.js";
 import { getToday } from "#shared/utils/date.js";
 import type { Ai, ImageItem } from "./_ports/ai.js";
@@ -9,7 +10,6 @@ const EXPENSE_SCHEMA = {
     amount: { type: "number", description: "金額（円）" },
     category: { type: "string", enum: CATEGORIES },
   },
-  required: ["date", "amount", "category"],
 };
 
 export function createExpenseParser(ai: Ai) {
@@ -55,11 +55,19 @@ function buildSystemPrompt(): string {
   return `あなたは家計簿アシスタントです。
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
 今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
-カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
+カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}
+支出情報を読み取れない場合は、date・amount・categoryのフィールドをすべて省略してください。`;
 }
 
 function toExpense(result: string): Expense {
   const parsed = JSON.parse(result);
+
+  if (
+    isNullish(parsed.date) ||
+    isNullish(parsed.amount) ||
+    isNullish(parsed.category)
+  )
+    throw new Error("Could not parse expense from input");
 
   const date = new Date(parsed.date);
   if (Number.isNaN(date.getTime()))
