@@ -49,6 +49,19 @@ describe("テキストから支出を解析する", () => {
       "Invalid category",
     );
   });
+
+  it("支出として解析できない入力でエラーを投げる", async () => {
+    const ai = createAi({
+      returnValue: JSON.stringify({
+        date: "2026-01-15",
+        amount: 500,
+        category: null,
+      }),
+    });
+    await expect(createExpenseParser(ai).fromText("500円")).rejects.toThrow(
+      "Could not parse expense from input",
+    );
+  });
 });
 
 describe("画像から支出を解析する", () => {

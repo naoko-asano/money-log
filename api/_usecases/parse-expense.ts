@@ -5,9 +5,13 @@ import type { Ai, ImageItem } from "./_ports/ai.js";
 const EXPENSE_SCHEMA = {
   type: "object",
   properties: {
-    date: { type: "string", description: "YYYY-MM-DD形式の日付" },
-    amount: { type: "number", description: "金額（円）" },
-    category: { type: "string", enum: CATEGORIES },
+    date: {
+      type: "string",
+      description: "YYYY-MM-DD形式の日付",
+      nullable: true,
+    },
+    amount: { type: "number", description: "金額（円）", nullable: true },
+    category: { type: "string", enum: CATEGORIES, nullable: true },
   },
   required: ["date", "amount", "category"],
 };
@@ -55,11 +59,19 @@ function buildSystemPrompt(): string {
   return `あなたは家計簿アシスタントです。
 ユーザーのメッセージから支出情報を読み取り、JSONで返してください。
 今日の日付は${today}です。日付が明示されていない場合は今日の日付を使用してください。
-カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}`;
+カテゴリは次の中から最も適切なものを選んでください：${CATEGORIES.join("、")}
+支出情報を読み取れない場合は、date・amount・categoryをすべてnullにしてください。`;
 }
 
 function toExpense(result: string): Expense {
   const parsed = JSON.parse(result);
+
+  if (
+    parsed.date === null ||
+    parsed.amount === null ||
+    parsed.category === null
+  )
+    throw new Error("Could not parse expense from input");
 
   const date = new Date(parsed.date);
   if (Number.isNaN(date.getTime()))
