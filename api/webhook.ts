@@ -9,7 +9,10 @@ import {
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
-import { parseConfirmationPayload } from "./_usecases/confirmation-payload.js";
+import {
+  isApproved,
+  parseConfirmationPayload,
+} from "./_usecases/confirmation-payload.js";
 import { handleConfirmation } from "./_usecases/handle-confirmation.js";
 import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
@@ -63,7 +66,7 @@ export async function POST(req: Request): Promise<Response> {
         }
         await handleConfirmation({
           userId: event.userId,
-          isApproved: confirmation.action === "ok",
+          isApproved: isApproved(confirmation),
           pendingWebhookEventId: confirmation.pendingWebhookEventId,
           reply,
           expensesRepo,
