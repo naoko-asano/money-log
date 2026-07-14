@@ -1,3 +1,4 @@
+import { isNullish } from "#api/_lib/is-nullish.js";
 import { CATEGORIES, type Expense, isCategory } from "#shared/model/expense.js";
 import { getToday } from "#shared/utils/date.js";
 import type { Ai, ImageItem } from "./_ports/ai.js";
@@ -67,9 +68,9 @@ function toExpense(result: string): Expense {
   const parsed = JSON.parse(result);
 
   if (
-    parsed.date === null ||
-    parsed.amount === null ||
-    parsed.category === null
+    isNullish(parsed.date) ||
+    isNullish(parsed.amount) ||
+    isNullish(parsed.category)
   )
     throw new Error("Could not parse expense from input");
 

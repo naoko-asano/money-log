@@ -50,12 +50,24 @@ describe("テキストから支出を解析する", () => {
     );
   });
 
-  it("支出として解析できない入力でエラーを投げる", async () => {
+  it("項目にnullが含まれる場合、エラーを投げる", async () => {
     const ai = createAi({
       returnValue: JSON.stringify({
         date: "2026-01-15",
         amount: 500,
         category: null,
+      }),
+    });
+    await expect(createExpenseParser(ai).fromText("500円")).rejects.toThrow(
+      "Could not parse expense from input",
+    );
+  });
+
+  it("項目が欠落している場合、エラーを投げる", async () => {
+    const ai = createAi({
+      returnValue: JSON.stringify({
+        date: "2026-01-15",
+        amount: 500,
       }),
     });
     await expect(createExpenseParser(ai).fromText("500円")).rejects.toThrow(
