@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMockedErrorHandler } from "#api/_test-utils/error-handler.js";
+import { createMockedExpensesRepo } from "#api/_test-utils/expenses-repo.js";
 import { createMockedReply } from "#api/_test-utils/reply.js";
-import type { ExpensesRepo } from "#api/_usecases/_ports/expenses-repo.js";
 import type { MediaReader } from "#api/_usecases/_ports/media-reader.js";
 import type { PendingExpensesRepo } from "#api/_usecases/_ports/pending-expenses-repo.js";
 import { buildConfirmationItems } from "#api/_usecases/confirmation-payload.js";
@@ -24,16 +24,6 @@ const BASE_EVENT = {
   userId: "user-001",
   replyToken: "reply-token-001",
 };
-
-function createExpensesRepo(
-  overrides: Partial<ExpensesRepo> = {},
-): ExpensesRepo {
-  return {
-    exists: vi.fn().mockResolvedValue(false),
-    createFromPending: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
 
 function createPendingExpensesRepo(
   overrides: Partial<PendingExpensesRepo> = {},
@@ -69,7 +59,7 @@ describe("confirmationイベントを受け取った場合", () => {
   it("有効なpayloadの場合、確認結果に応じて支出を登録する", async () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo({
       get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
     });
@@ -102,7 +92,7 @@ describe("confirmationイベントを受け取った場合", () => {
   it("不正なpayloadの場合、エラーハンドラーを呼び出し、支出登録の処理は行わない", async () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
 
     await handleWebhookEvent(
@@ -146,7 +136,7 @@ describe("textイベントを受け取った場合", () => {
         errorHandler,
         expenseParser,
         mediaReader: createMediaReader(),
-        expensesRepo: createExpensesRepo(),
+        expensesRepo: createMockedExpensesRepo(),
         pendingExpensesRepo,
       },
     );
@@ -189,7 +179,7 @@ describe("imageイベントを受け取った場合", () => {
         errorHandler,
         expenseParser,
         mediaReader,
-        expensesRepo: createExpensesRepo(),
+        expensesRepo: createMockedExpensesRepo(),
         pendingExpensesRepo,
       },
     );

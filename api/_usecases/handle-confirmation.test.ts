@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMockedErrorHandler } from "#api/_test-utils/error-handler.js";
+import { createMockedExpensesRepo } from "#api/_test-utils/expenses-repo.js";
 import { createMockedReply } from "#api/_test-utils/reply.js";
-import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import { handleConfirmation } from "./handle-confirmation";
 
@@ -17,16 +17,6 @@ const BASE_ARGS = {
   pendingWebhookEventId: "event-001",
 };
 
-function createExpensesRepo(
-  overrides: Partial<ExpensesRepo> = {},
-): ExpensesRepo {
-  return {
-    exists: vi.fn().mockResolvedValue(false),
-    createFromPending: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
 function createPendingExpensesRepo(
   overrides: Partial<PendingExpensesRepo> = {},
 ): PendingExpensesRepo {
@@ -41,7 +31,7 @@ function createPendingExpensesRepo(
 describe("支出登録の確認ボタンが押下された場合", () => {
   it("承認された場合、支出を登録してメッセージを送信する", async () => {
     const reply = createMockedReply();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
@@ -65,7 +55,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
 
   it("キャンセルされた場合、支出を削除してメッセージを送信する", async () => {
     const reply = createMockedReply();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
@@ -90,7 +80,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
 
   it("確認待ちの支出がない場合、エラーメッセージを送信する", async () => {
     const reply = createMockedReply();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
     await handleConfirmation({
@@ -111,7 +101,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
 
   it("確認待ち支出の取得に失敗した場合、エラーハンドラーを呼び出す", async () => {
     const reply = createMockedReply();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const errorHandler = createMockedErrorHandler();
     const error = new Error("db error");
 
@@ -144,7 +134,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       ...BASE_ARGS,
       isApproved: true,
       reply,
-      expensesRepo: createExpensesRepo({
+      expensesRepo: createMockedExpensesRepo({
         createFromPending: vi.fn().mockRejectedValue(error),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
@@ -169,7 +159,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       ...BASE_ARGS,
       isApproved: false,
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         delete: vi.fn().mockRejectedValue(error),
       }),
@@ -186,7 +176,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
 
   it("異なる webhookEventId の場合、何もしない", async () => {
     const reply = createMockedReply();
-    const expensesRepo = createExpensesRepo();
+    const expensesRepo = createMockedExpensesRepo();
     const pendingExpensesRepo = createPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
