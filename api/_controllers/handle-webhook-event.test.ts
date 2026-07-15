@@ -25,7 +25,7 @@ const BASE_EVENT = {
   replyToken: "reply-token-001",
 };
 
-function createPendingExpensesRepo(
+function createMockedPendingExpensesRepo(
   overrides: Partial<PendingExpensesRepo> = {},
 ): PendingExpensesRepo {
   return {
@@ -36,7 +36,7 @@ function createPendingExpensesRepo(
   };
 }
 
-function createExpenseParser(
+function createMockedExpenseParser(
   overrides: Partial<ExpenseParser> = {},
 ): ExpenseParser {
   return {
@@ -46,7 +46,9 @@ function createExpenseParser(
   };
 }
 
-function createMediaReader(overrides: Partial<MediaReader> = {}): MediaReader {
+function createMockedMediaReader(
+  overrides: Partial<MediaReader> = {},
+): MediaReader {
   return {
     read: vi
       .fn()
@@ -60,7 +62,7 @@ describe("confirmationイベントを受け取った場合", () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
     const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createPendingExpensesRepo({
+    const pendingExpensesRepo = createMockedPendingExpensesRepo({
       get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
     });
 
@@ -73,8 +75,8 @@ describe("confirmationイベントを受け取った場合", () => {
       {
         reply,
         errorHandler,
-        expenseParser: createExpenseParser(),
-        mediaReader: createMediaReader(),
+        expenseParser: createMockedExpenseParser(),
+        mediaReader: createMockedMediaReader(),
         expensesRepo,
         pendingExpensesRepo,
       },
@@ -93,7 +95,7 @@ describe("confirmationイベントを受け取った場合", () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
     const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createPendingExpensesRepo();
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
 
     await handleWebhookEvent(
       {
@@ -104,8 +106,8 @@ describe("confirmationイベントを受け取った場合", () => {
       {
         reply,
         errorHandler,
-        expenseParser: createExpenseParser(),
-        mediaReader: createMediaReader(),
+        expenseParser: createMockedExpenseParser(),
+        mediaReader: createMockedMediaReader(),
         expensesRepo,
         pendingExpensesRepo,
       },
@@ -126,8 +128,8 @@ describe("textイベントを受け取った場合", () => {
   it("入力されたテキストを解析して確認待ち支出を作成する", async () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
-    const pendingExpensesRepo = createPendingExpensesRepo();
-    const expenseParser = createExpenseParser();
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
+    const expenseParser = createMockedExpenseParser();
 
     await handleWebhookEvent(
       { ...BASE_EVENT, type: "text", text: "コーヒー 500円" },
@@ -135,7 +137,7 @@ describe("textイベントを受け取った場合", () => {
         reply,
         errorHandler,
         expenseParser,
-        mediaReader: createMediaReader(),
+        mediaReader: createMockedMediaReader(),
         expensesRepo: createMockedExpensesRepo(),
         pendingExpensesRepo,
       },
@@ -163,9 +165,9 @@ describe("imageイベントを受け取った場合", () => {
   it("画像を取得して解析し、確認待ち支出を作成する", async () => {
     const reply = createMockedReply();
     const errorHandler = createMockedErrorHandler();
-    const pendingExpensesRepo = createPendingExpensesRepo();
-    const expenseParser = createExpenseParser();
-    const mediaReader = createMediaReader({
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
+    const expenseParser = createMockedExpenseParser();
+    const mediaReader = createMockedMediaReader({
       read: vi.fn().mockResolvedValue({
         mimeType: "image/png",
         imageBase64: "encoded-image",
