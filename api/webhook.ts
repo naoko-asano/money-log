@@ -1,3 +1,4 @@
+import { handleWebhookEvent } from "./_controllers/handle-webhook-event.js";
 import { ai } from "./_infrastructure/ai/index.js";
 import { expensesRepo } from "./_infrastructure/db/expenses-repo.js";
 import { pendingExpensesRepo } from "./_infrastructure/db/pending-expenses-repo.js";
@@ -9,12 +10,6 @@ import {
   parseWebhookEvents,
 } from "./_infrastructure/messaging/index.js";
 import { verifySignature } from "./_lib/verify-signature.js";
-import {
-  isApproved,
-  parseConfirmationPayload,
-} from "./_usecases/confirmation-payload.js";
-import { handleConfirmation } from "./_usecases/handle-confirmation.js";
-import { handleExpenseInput } from "./_usecases/handle-expense-input.js";
 import { createExpenseParser } from "./_usecases/parse-expense.js";
 
 const expenseParser = createExpenseParser(ai);
@@ -52,53 +47,14 @@ export async function POST(req: Request): Promise<Response> {
     const errorHandler = createErrorHandler(eventContext);
 
     try {
-      if (event.type === "confirmation") {
-        const confirmation = parseConfirmationPayload(
-          event.confirmationPayload,
-        );
-        if (!confirmation) {
-          await errorHandler.run({
-            error: new Error("invalid confirmationPayload"),
-            label: "parseConfirmationPayload",
-            reply,
-          });
-          continue;
-        }
-        await handleConfirmation({
-          userId: event.userId,
-          isApproved: isApproved(confirmation),
-          pendingWebhookEventId: confirmation.pendingWebhookEventId,
-          reply,
-          expensesRepo,
-          pendingExpensesRepo,
-          errorHandler,
-        });
-      } else if (event.type === "text") {
-        await handleExpenseInput({
-          userId: event.userId,
-          webhookEventId: event.webhookEventId,
-          parseInput: () => expenseParser.fromText(event.text),
-          reply,
-          expensesRepo,
-          pendingExpensesRepo,
-          errorHandler,
-        });
-      } else if (event.type === "image") {
-        await handleExpenseInput({
-          userId: event.userId,
-          webhookEventId: event.webhookEventId,
-          parseInput: async () => {
-            const { mimeType, imageBase64 } = await mediaReader.read(
-              event.messageId,
-            );
-            return expenseParser.fromImage({ mimeType, imageBase64 });
-          },
-          reply,
-          expensesRepo,
-          pendingExpensesRepo,
-          errorHandler,
-        });
-      }
+      await handleWebhookEvent(event, {
+        reply,
+        errorHandler,
+        expenseParser,
+        mediaReader,
+        expensesRepo,
+        pendingExpensesRepo,
+      });
     } catch (error) {
       await errorHandler.run({
         error,
