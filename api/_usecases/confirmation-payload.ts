@@ -55,6 +55,10 @@ export function parseConfirmationPayload(
   return { action, pendingWebhookEventId };
 }
 
+export function isApproved(payload: ConfirmationPayload): boolean {
+  return payload.action === "ok";
+}
+
 function isConfirmationAction(s: unknown): s is ConfirmationAction {
   return (CONFIRMATION_ACTIONS as readonly unknown[]).includes(s);
 }

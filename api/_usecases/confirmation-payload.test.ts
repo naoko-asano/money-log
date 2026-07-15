@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildConfirmationItems,
+  isApproved,
   parseConfirmationPayload,
 } from "./confirmation-payload";
 
@@ -52,5 +53,19 @@ describe("出費登録の是非を確認したpayloadの解析", () => {
 
   it("pendingWebhookEventIdが欠けている場合、nullを返す", () => {
     expect(parseConfirmationPayload('{"action":"ok"}')).toBeNull();
+  });
+});
+
+describe("承認アクションかどうかの判定", () => {
+  it("actionがokの場合、trueを返す", () => {
+    expect(
+      isApproved({ action: "ok", pendingWebhookEventId: "event-001" }),
+    ).toBe(true);
+  });
+
+  it("actionがcancelの場合、falseを返す", () => {
+    expect(
+      isApproved({ action: "cancel", pendingWebhookEventId: "event-001" }),
+    ).toBe(false);
   });
 });
