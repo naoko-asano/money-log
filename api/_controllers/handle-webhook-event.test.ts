@@ -8,6 +8,8 @@ import { buildConfirmationItems } from "#api/_usecases/confirmation-payload.js";
 import type { ExpenseParser } from "#api/_usecases/parse-expense.js";
 import { handleWebhookEvent } from "./handle-webhook-event";
 
+type Deps = Parameters<typeof handleWebhookEvent>[1];
+
 const EXPENSE = {
   date: new Date("2026-01-15"),
   amount: 500,
@@ -57,13 +59,24 @@ function createMockedMediaReader(
   };
 }
 
+function createMockedDeps(overrides: Partial<Deps> = {}): Deps {
+  return {
+    reply: createMockedReply(),
+    errorHandler: createMockedErrorHandler(),
+    expenseParser: createMockedExpenseParser(),
+    mediaReader: createMockedMediaReader(),
+    expensesRepo: createMockedExpensesRepo(),
+    pendingExpensesRepo: createMockedPendingExpensesRepo(),
+    ...overrides,
+  };
+}
+
 describe("confirmationイベントを受け取った場合", () => {
   it("有効なpayloadの場合、確認結果に応じて支出を登録する", async () => {
-    const reply = createMockedReply();
-    const errorHandler = createMockedErrorHandler();
-    const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createMockedPendingExpensesRepo({
-      get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
+    const deps = createMockedDeps({
+      pendingExpensesRepo: createMockedPendingExpensesRepo({
+        get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
+      }),
     });
 
     await handleWebhookEvent(
@@ -72,30 +85,20 @@ describe("confirmationイベントを受け取った場合", () => {
         type: "confirmation",
         confirmationPayload: buildConfirmationItems("event-001")[0].data,
       },
-      {
-        reply,
-        errorHandler,
-        expenseParser: createMockedExpenseParser(),
-        mediaReader: createMockedMediaReader(),
-        expensesRepo,
-        pendingExpensesRepo,
-      },
+      deps,
     );
 
-    expect(expensesRepo.createFromPending).toHaveBeenCalledOnce();
-    expect(expensesRepo.createFromPending).toHaveBeenCalledWith(
+    expect(deps.expensesRepo.createFromPending).toHaveBeenCalledOnce();
+    expect(deps.expensesRepo.createFromPending).toHaveBeenCalledWith(
       "user-001",
       PENDING_EXPENSE,
     );
-    expect(reply.send).toHaveBeenCalledOnce();
-    expect(reply.send).toHaveBeenCalledWith("登録しました！");
+    expect(deps.reply.send).toHaveBeenCalledOnce();
+    expect(deps.reply.send).toHaveBeenCalledWith("登録しました！");
   });
 
   it("不正なpayloadの場合、エラーハンドラーを呼び出し、支出登録の処理は行わない", async () => {
-    const reply = createMockedReply();
-    const errorHandler = createMockedErrorHandler();
-    const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createMockedPendingExpensesRepo();
+    const deps = createMockedDeps();
 
     await handleWebhookEvent(
       {
@@ -103,56 +106,39 @@ describe("confirmationイベントを受け取った場合", () => {
         type: "confirmation",
         confirmationPayload: "not json",
       },
-      {
-        reply,
-        errorHandler,
-        expenseParser: createMockedExpenseParser(),
-        mediaReader: createMockedMediaReader(),
-        expensesRepo,
-        pendingExpensesRepo,
-      },
+      deps,
     );
 
-    expect(errorHandler.run).toHaveBeenCalledOnce();
-    expect(errorHandler.run).toHaveBeenCalledWith({
+    expect(deps.errorHandler.run).toHaveBeenCalledOnce();
+    expect(deps.errorHandler.run).toHaveBeenCalledWith({
       error: expect.any(Error),
       label: "parseConfirmationPayload",
-      reply,
+      reply: deps.reply,
     });
-    expect(pendingExpensesRepo.get).not.toHaveBeenCalled();
-    expect(expensesRepo.createFromPending).not.toHaveBeenCalled();
+    expect(deps.pendingExpensesRepo.get).not.toHaveBeenCalled();
+    expect(deps.expensesRepo.createFromPending).not.toHaveBeenCalled();
   });
 });
 
 describe("textイベントを受け取った場合", () => {
   it("入力されたテキストを解析して確認待ち支出を作成する", async () => {
-    const reply = createMockedReply();
-    const errorHandler = createMockedErrorHandler();
-    const pendingExpensesRepo = createMockedPendingExpensesRepo();
-    const expenseParser = createMockedExpenseParser();
+    const deps = createMockedDeps();
 
     await handleWebhookEvent(
       { ...BASE_EVENT, type: "text", text: "コーヒー 500円" },
-      {
-        reply,
-        errorHandler,
-        expenseParser,
-        mediaReader: createMockedMediaReader(),
-        expensesRepo: createMockedExpensesRepo(),
-        pendingExpensesRepo,
-      },
+      deps,
     );
 
-    expect(expenseParser.fromText).toHaveBeenCalledOnce();
-    expect(expenseParser.fromText).toHaveBeenCalledWith("コーヒー 500円");
-    expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
-    expect(pendingExpensesRepo.create).toHaveBeenCalledWith(
+    expect(deps.expenseParser.fromText).toHaveBeenCalledOnce();
+    expect(deps.expenseParser.fromText).toHaveBeenCalledWith("コーヒー 500円");
+    expect(deps.pendingExpensesRepo.create).toHaveBeenCalledOnce();
+    expect(deps.pendingExpensesRepo.create).toHaveBeenCalledWith(
       "user-001",
       EXPENSE,
       "event-001",
     );
-    expect(reply.sendWithQuickItems).toHaveBeenCalledOnce();
-    expect(reply.sendWithQuickItems).toHaveBeenCalledWith(
+    expect(deps.reply.sendWithQuickItems).toHaveBeenCalledOnce();
+    expect(deps.reply.sendWithQuickItems).toHaveBeenCalledWith(
       expect.not.stringContaining(
         "先に確認中の支出を「はい」か「いいえ」で回答してください。",
       ),
@@ -163,38 +149,29 @@ describe("textイベントを受け取った場合", () => {
 
 describe("imageイベントを受け取った場合", () => {
   it("画像を取得して解析し、確認待ち支出を作成する", async () => {
-    const reply = createMockedReply();
-    const errorHandler = createMockedErrorHandler();
-    const pendingExpensesRepo = createMockedPendingExpensesRepo();
-    const expenseParser = createMockedExpenseParser();
-    const mediaReader = createMockedMediaReader({
-      read: vi.fn().mockResolvedValue({
-        mimeType: "image/png",
-        imageBase64: "encoded-image",
+    const deps = createMockedDeps({
+      mediaReader: createMockedMediaReader({
+        read: vi.fn().mockResolvedValue({
+          mimeType: "image/png",
+          imageBase64: "encoded-image",
+        }),
       }),
     });
 
     await handleWebhookEvent(
       { ...BASE_EVENT, type: "image", messageId: "message-001" },
-      {
-        reply,
-        errorHandler,
-        expenseParser,
-        mediaReader,
-        expensesRepo: createMockedExpensesRepo(),
-        pendingExpensesRepo,
-      },
+      deps,
     );
 
-    expect(mediaReader.read).toHaveBeenCalledOnce();
-    expect(mediaReader.read).toHaveBeenCalledWith("message-001");
-    expect(expenseParser.fromImage).toHaveBeenCalledOnce();
-    expect(expenseParser.fromImage).toHaveBeenCalledWith({
+    expect(deps.mediaReader.read).toHaveBeenCalledOnce();
+    expect(deps.mediaReader.read).toHaveBeenCalledWith("message-001");
+    expect(deps.expenseParser.fromImage).toHaveBeenCalledOnce();
+    expect(deps.expenseParser.fromImage).toHaveBeenCalledWith({
       mimeType: "image/png",
       imageBase64: "encoded-image",
     });
-    expect(pendingExpensesRepo.create).toHaveBeenCalledOnce();
-    expect(pendingExpensesRepo.create).toHaveBeenCalledWith(
+    expect(deps.pendingExpensesRepo.create).toHaveBeenCalledOnce();
+    expect(deps.pendingExpensesRepo.create).toHaveBeenCalledWith(
       "user-001",
       EXPENSE,
       "event-001",
