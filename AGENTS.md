@@ -65,7 +65,7 @@ money-log/
 
 ## テストの書き方
 
-- ヘルパー関数のプレフィックスは `make` ではなく `create` を使う
+- モックを生成するヘルパー関数のプレフィックスは `createMocked`（例: `createMockedExpensesRepo`）を使う
 - `describe` にはメソッド名ではなく振る舞いを書く
 - モックの呼び出しを検証する際は、引数（`toHaveBeenCalledWith`）と呼ばれた回数（`toHaveBeenCalledOnce` など）を検証する
 

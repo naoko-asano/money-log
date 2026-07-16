@@ -17,7 +17,7 @@ const BASE_ARGS = {
   pendingWebhookEventId: "event-001",
 };
 
-function createPendingExpensesRepo(
+function createMockedPendingExpensesRepo(
   overrides: Partial<PendingExpensesRepo> = {},
 ): PendingExpensesRepo {
   return {
@@ -32,7 +32,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("承認された場合、支出を登録してメッセージを送信する", async () => {
     const reply = createMockedReply();
     const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createPendingExpensesRepo();
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
     await handleConfirmation({
@@ -56,7 +56,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("キャンセルされた場合、支出を削除してメッセージを送信する", async () => {
     const reply = createMockedReply();
     const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createPendingExpensesRepo();
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
     await handleConfirmation({
@@ -88,7 +88,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       isApproved: true,
       reply,
       expensesRepo,
-      pendingExpensesRepo: createPendingExpensesRepo({
+      pendingExpensesRepo: createMockedPendingExpensesRepo({
         get: vi.fn().mockResolvedValue(null),
       }),
       errorHandler,
@@ -110,7 +110,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       isApproved: true,
       reply,
       expensesRepo,
-      pendingExpensesRepo: createPendingExpensesRepo({
+      pendingExpensesRepo: createMockedPendingExpensesRepo({
         get: vi.fn().mockRejectedValue(error),
       }),
       errorHandler,
@@ -137,7 +137,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       expensesRepo: createMockedExpensesRepo({
         createFromPending: vi.fn().mockRejectedValue(error),
       }),
-      pendingExpensesRepo: createPendingExpensesRepo(),
+      pendingExpensesRepo: createMockedPendingExpensesRepo(),
       errorHandler,
     });
 
@@ -160,7 +160,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
       isApproved: false,
       reply,
       expensesRepo: createMockedExpensesRepo(),
-      pendingExpensesRepo: createPendingExpensesRepo({
+      pendingExpensesRepo: createMockedPendingExpensesRepo({
         delete: vi.fn().mockRejectedValue(error),
       }),
       errorHandler,
@@ -177,7 +177,7 @@ describe("支出登録の確認ボタンが押下された場合", () => {
   it("異なる webhookEventId の場合、何もしない", async () => {
     const reply = createMockedReply();
     const expensesRepo = createMockedExpensesRepo();
-    const pendingExpensesRepo = createPendingExpensesRepo();
+    const pendingExpensesRepo = createMockedPendingExpensesRepo();
     const errorHandler = createMockedErrorHandler();
 
     await handleConfirmation({
