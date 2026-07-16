@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMockedErrorHandler } from "#api/_test-utils/error-handler.js";
+import { createMockedExpensesRepo } from "#api/_test-utils/expenses-repo.js";
 import { createMockedReply } from "#api/_test-utils/reply.js";
-import type { ExpensesRepo } from "./_ports/expenses-repo";
 import type { PendingExpensesRepo } from "./_ports/pending-expenses-repo";
 import { handleExpenseInput } from "./handle-expense-input";
 
@@ -20,16 +20,6 @@ const BASE_ARGS = {
   userId: "user-001",
   webhookEventId: "event-001",
 };
-
-function createExpensesRepo(
-  overrides: Partial<ExpensesRepo> = {},
-): ExpensesRepo {
-  return {
-    exists: vi.fn().mockResolvedValue(false),
-    createFromPending: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
 
 function createPendingExpensesRepo(
   overrides: Partial<PendingExpensesRepo> = {},
@@ -52,7 +42,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo,
       errorHandler,
     });
@@ -82,7 +72,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput,
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockResolvedValue(PENDING_EXPENSE),
       }),
@@ -109,7 +99,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput,
       reply,
-      expensesRepo: createExpensesRepo({
+      expensesRepo: createMockedExpensesRepo({
         exists: vi.fn().mockResolvedValue(true),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
@@ -131,7 +121,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockRejectedValue(error),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo,
       errorHandler,
     });
@@ -156,7 +146,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput,
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         get: vi.fn().mockRejectedValue(error),
       }),
@@ -183,7 +173,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput,
       reply,
-      expensesRepo: createExpensesRepo({
+      expensesRepo: createMockedExpensesRepo({
         exists: vi.fn().mockRejectedValue(error),
       }),
       pendingExpensesRepo: createPendingExpensesRepo(),
@@ -209,7 +199,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockRejectedValue(error),
       }),
@@ -233,7 +223,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
         get: vi
@@ -267,7 +257,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
         get: getPendingExpense,
@@ -298,7 +288,7 @@ describe("支出が入力された場合", () => {
       ...BASE_ARGS,
       parseInput: vi.fn().mockResolvedValue(EXPENSE),
       reply,
-      expensesRepo: createExpensesRepo(),
+      expensesRepo: createMockedExpensesRepo(),
       pendingExpensesRepo: createPendingExpensesRepo({
         create: vi.fn().mockResolvedValue(null),
         get: getPendingExpense,
