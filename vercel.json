@@ -1,4 +1,4 @@
 {
-  "buildCommand": "pnpm migrate:prod",
-  "outputDirectory": "web"
+  "buildCommand": "pnpm migrate:prod && pnpm --dir web install --frozen-lockfile && pnpm --dir web run build",
+  "outputDirectory": "web/dist"
 }
